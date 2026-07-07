@@ -1,0 +1,29 @@
+# Motion-activated lighting driven by the office-sensor ESP32 board.
+# Clone this pattern per room; swap entity IDs.
+automation:
+  - alias: "Lighting - Office on motion when dark"
+    id: lighting_office_motion_on
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.office_sensor_motion
+        to: "on"
+    conditions:
+      - condition: numeric_state
+        entity_id: sensor.office_sensor_illuminance
+        below: 40
+    actions:
+      - action: light.turn_on
+        target:
+          entity_id: light.office
+
+  - alias: "Lighting - Office off after 10 min no motion"
+    id: lighting_office_motion_off
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.office_sensor_motion
+        to: "off"
+        for: "00:10:00"
+    actions:
+      - action: light.turn_off
+        target:
+          entity_id: light.office

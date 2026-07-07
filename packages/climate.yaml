@@ -1,0 +1,17 @@
+# Indoor climate rollups from ESP32 room sensors.
+# Add each new room sensor's temperature entity to the list.
+template:
+  - sensor:
+      - name: "Indoor average temperature"
+        unique_id: indoor_average_temperature
+        unit_of_measurement: "°F"
+        device_class: temperature
+        state_class: measurement
+        state: >
+          {% set temps = [
+              states('sensor.office_sensor_temperature'),
+            ] | reject('in', ['unknown', 'unavailable', 'none']) | map('float') | list %}
+          {{ (temps | average) | round(1) if temps else none }}
+        availability: >
+          {{ [states('sensor.office_sensor_temperature')]
+             | reject('in', ['unknown', 'unavailable', 'none']) | list | count > 0 }}
