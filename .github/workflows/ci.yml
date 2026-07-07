@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  yamllint:
+    name: YAML lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install yamllint
+      - run: yamllint .
+
+  ha-config:
+    name: Home Assistant config check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Provide secrets from example
+        run: cp secrets.yaml.example secrets.yaml
+      - name: Check configuration
+        uses: frenck/action-home-assistant@v1
+        with:
+          path: "."
+          version: stable
+
+  esphome:
+    name: ESPHome config check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install esphome
+      - name: Provide secrets from example
+        run: cp secrets.yaml.example esphome/devices/secrets.yaml
+      - name: Validate all device configs
+        run: |
+          set -e
+          for f in esphome/devices/*.yaml; do
+            case "$f" in *secrets*) continue;; esac
+            echo "== $f"
+            esphome config "$f" > /dev/null
+          done
