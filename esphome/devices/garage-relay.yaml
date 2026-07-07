@@ -1,0 +1,29 @@
+# Relay controller with physical fallback button.
+# restore_mode ALWAYS_OFF: relays stay off after power loss — safe for
+# garage doors, irrigation valves, and anything that must not self-start.
+substitutions:
+  device_name: garage-relay
+  friendly_name: Garage Relay
+  board: esp32dev
+
+packages:
+  base: !include ../common/base.yaml
+
+switch:
+  - platform: gpio
+    pin: GPIO26
+    name: Relay 1
+    id: relay_1
+    restore_mode: ALWAYS_OFF
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO33
+      mode: INPUT_PULLUP
+      inverted: true
+    name: Button 1
+    filters:
+      - delayed_on: 10ms
+    on_press:
+      - switch.toggle: relay_1

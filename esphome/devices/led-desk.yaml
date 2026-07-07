@@ -1,0 +1,23 @@
+# WS2812B addressable LED strip with effects.
+substitutions:
+  device_name: led-desk
+  friendly_name: Desk LEDs
+  board: esp32dev
+
+packages:
+  base: !include ../common/base.yaml
+
+light:
+  - platform: esp32_rmt_led_strip
+    name: LED Strip
+    pin: GPIO16
+    num_leds: 60
+    chipset: WS2812
+    rgb_order: GRB
+    restore_mode: RESTORE_DEFAULT_OFF
+    effects:
+      - addressable_rainbow:
+      - addressable_color_wipe:
+      - addressable_twinkle:
+      - addressable_scan:
+      - pulse:

@@ -1,0 +1,9 @@
+# Pure BLE range extender — the minimal new-board case.
+substitutions:
+  device_name: ble-proxy-hallway
+  friendly_name: BLE Proxy Hallway
+  board: esp32dev
+
+packages:
+  base: !include ../common/base.yaml
+  ble: !include ../common/ble_proxy.yaml

@@ -1,0 +1,36 @@
+# Room multi-sensor: BME280 (temp/humidity/pressure), BH1750 (lux), PIR motion.
+# Also acts as a Bluetooth proxy.
+substitutions:
+  device_name: office-sensor
+  friendly_name: Office Sensor
+  board: esp32dev
+
+packages:
+  base: !include ../common/base.yaml
+  ble: !include ../common/ble_proxy.yaml
+
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
+
+sensor:
+  - platform: bme280_i2c
+    address: 0x76
+    update_interval: 60s
+    temperature:
+      name: Temperature
+    humidity:
+      name: Humidity
+    pressure:
+      name: Pressure
+  - platform: bh1750
+    name: Illuminance
+    address: 0x23
+    update_interval: 30s
+
+binary_sensor:
+  - platform: gpio
+    pin: GPIO27
+    name: Motion
+    device_class: motion
