@@ -1,0 +1,41 @@
+title: Overview (Git)
+views:
+  - title: Home
+    path: home
+    icon: mdi:home
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Climate
+          - type: entity
+            entity: sensor.indoor_average_temperature
+            name: Indoor Average
+          - type: entities
+            title: Office
+            entities:
+              - sensor.office_sensor_temperature
+              - sensor.office_sensor_humidity
+              - sensor.office_sensor_illuminance
+              - binary_sensor.office_sensor_motion
+      - type: grid
+        cards:
+          - type: heading
+            heading: Controls
+          - type: entities
+            title: Relays & LEDs
+            entities:
+              - switch.garage_relay_relay_1
+              - light.desk_leds_led_strip
+      - type: grid
+        cards:
+          - type: heading
+            heading: Device Health
+          - type: entities
+            title: ESP32 Boards
+            entities:
+              - sensor.office_sensor_wifi_signal
+              - sensor.garage_relay_wifi_signal
+              - sensor.ble_proxy_hallway_wifi_signal
+              - sensor.desk_leds_wifi_signal
