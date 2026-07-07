@@ -1,0 +1,13 @@
+extends: default
+
+ignore: |
+  .storage/
+
+rules:
+  line-length: disable
+  document-start: disable
+  truthy: disable
+  comments:
+    min-spaces-from-content: 1
+  braces:
+    max-spaces-inside: 1

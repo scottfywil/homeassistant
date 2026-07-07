@@ -1,0 +1,29 @@
+# Secrets — NEVER commit
+secrets.yaml
+esphome/secrets.yaml
+esphome/devices/secrets.yaml
+zigbee2mqtt/secret.yaml
+
+# Home Assistant runtime state
+.storage/
+.cloud/
+.HA_VERSION
+.uuid
+home-assistant.log*
+home-assistant_v2.db*
+zigbee.db*
+deps/
+tts/
+backups/
+blueprints/
+image/
+www/community/
+
+# ESPHome build artifacts
+esphome/.esphome/
+.esphome/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+__pycache__/
