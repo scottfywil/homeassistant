@@ -1,0 +1,26 @@
+# Reference config for the Zigbee2MQTT add-on.
+# Copy into the add-on's data directory; create secret.yaml beside it
+# with mqtt_username / mqtt_password (see secrets.yaml.example).
+homeassistant:
+  enabled: true
+
+mqtt:
+  base_topic: zigbee2mqtt
+  server: mqtt://core-mosquitto:1883
+  user: '!secret mqtt_username'
+  password: '!secret mqtt_password'
+
+serial:
+  port: /dev/ttyACM0
+  adapter: ember  # Sonoff ZBDongle-E (EFR32). Use 'zstack' for ZBDongle-P/CC2652.
+
+frontend:
+  enabled: true
+  port: 8099
+
+advanced:
+  channel: 20
+  network_key: GENERATE
+  last_seen: ISO_8601
+
+permit_join: false
