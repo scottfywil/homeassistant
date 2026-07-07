@@ -1,0 +1,20 @@
+# Core stays slim — features live in packages/.
+default_config:
+
+homeassistant:
+  packages: !include_dir_named packages
+
+# UI-created automations/scripts/scenes (keeps the UI editors working)
+automation ui: !include automations.yaml
+script ui: !include scripts.yaml
+scene ui: !include scenes.yaml
+
+# Git-managed YAML dashboard alongside the default UI dashboard
+lovelace:
+  mode: storage
+  dashboards:
+    yaml-overview:
+      mode: yaml
+      title: Overview (Git)
+      icon: mdi:home-automation
+      filename: dashboards/overview.yaml

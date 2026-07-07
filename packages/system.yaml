@@ -1,0 +1,15 @@
+# System housekeeping
+recorder:
+  purge_keep_days: 14
+
+automation:
+  - alias: "System - Notify on Home Assistant start"
+    id: system_notify_ha_start
+    triggers:
+      - trigger: homeassistant
+        event: start
+    actions:
+      - action: persistent_notification.create
+        data:
+          title: "Home Assistant started"
+          message: "Config loaded {{ now().strftime('%Y-%m-%d %H:%M') }}."
