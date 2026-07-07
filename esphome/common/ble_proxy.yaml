@@ -1,0 +1,7 @@
+# Add to any esp32 board with free radio time to extend BLE coverage.
+esp32_ble_tracker:
+  scan_parameters:
+    active: true
+
+bluetooth_proxy:
+  active: true
