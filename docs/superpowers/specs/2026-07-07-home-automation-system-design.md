@@ -16,7 +16,7 @@ unrelated to HubWise systems.
 
 | Decision | Choice |
 |---|---|
-| HA platform | Home Assistant OS on dedicated hardware (Intel N100 mini PC or Raspberry Pi 4/5) |
+| HA platform | Home Assistant OS (generic x86-64) bare-metal on a dedicated always-on PC, wiping Windows |
 | Zigbee | Zigbee2MQTT + Mosquitto add-ons, Sonoff ZBDongle-E (or similar EFR32/CC2652) coordinator |
 | Alexa | Nabu Casa (Home Assistant Cloud, $6.50/mo) — exposes HA entities to Alexa, provides remote access |
 | ESP32 firmware | ESPHome (YAML-defined, OTA, auto-discovery) |
@@ -104,7 +104,7 @@ encryption key, OTA password, MQTT credentials, latitude/longitude/elevation.
 
 ## Runbooks (docs/)
 
-- `01-flash-haos.md` — image the mini PC / Pi, first boot, onboarding
+- `01-flash-haos.md` — image the x86-64 PC bare-metal, first boot, onboarding
 - `02-addons.md` — install/configure Mosquitto, Zigbee2MQTT, ESPHome,
   Git Pull, Tailscale, Studio Code Server, Samba
 - `03-nabu-casa-alexa.md` — subscribe, link Alexa skill, entity exposure rules

@@ -11,7 +11,7 @@ clones it onto the HAOS box; push to GitHub and the box updates itself.
 
 | Layer | Choice |
 |---|---|
-| Platform | Home Assistant OS on dedicated hardware (Intel N100 mini PC or Raspberry Pi 4/5) |
+| Platform | Home Assistant OS (generic x86-64) bare-metal on a dedicated always-on PC |
 | Zigbee | Zigbee2MQTT + Mosquitto add-ons, Sonoff ZBDongle-E coordinator |
 | ESP32 boards | ESPHome (YAML firmware, OTA, auto-discovery) |
 | Voice / remote | Nabu Casa (Home Assistant Cloud) → Alexa |

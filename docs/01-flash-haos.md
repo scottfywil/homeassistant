@@ -2,34 +2,35 @@
 
 ## Hardware
 
-Either works; the N100 has more headroom:
-
-| Option | Notes |
-|---|---|
-| **Intel N100 mini PC** (~$150) | Beelink/GMKtec class, 8–16 GB RAM, NVMe. Fanless models available. Best choice if cameras/Frigate are ever on the roadmap. |
-| **Raspberry Pi 4/5** (4 GB+) | Use an SSD via USB3, **not** an SD card, for the database's sake. |
+Host: a **dedicated always-on x86-64 PC** running HAOS bare-metal. HAOS takes
+over the entire disk, so **Windows is wiped** — this box has no other job.
 
 Also needed:
 
 - **Sonoff ZBDongle-E** (Zigbee coordinator) + a **USB 2.0 extension cable**
-  (mandatory — moves the radio away from USB3/board RF interference).
-- Ethernet connection strongly preferred over WiFi.
+  (mandatory — moves the radio away from USB3/case RF interference).
+- **Wired Ethernet** strongly preferred over WiFi for the controller.
+- A spare USB stick (≥2 GB) to boot a live Linux for flashing.
+
+> **Warning:** flashing wipes the target disk completely. Back up anything on
+> the PC first. If the PC has more than one drive, know exactly which one you
+> mean to write to.
 
 ## Flash
 
-### Mini PC (x86-64)
-
-1. Download the generic x86-64 HAOS image from https://www.home-assistant.io/installation/generic-x86-64/
-2. Boot the mini PC from a Ubuntu live USB, then write the HAOS image
-   directly to the internal disk:
-   `zstdcat haos_generic-x86-64-*.img.zst | sudo dd of=/dev/nvme0n1 bs=4M status=progress`
-   (double-check the target disk with `lsblk` first)
-3. Ensure UEFI boot is enabled in BIOS, secure boot disabled.
-
-### Raspberry Pi
-
-1. Use Raspberry Pi Imager → "Other specific-purpose OS" → Home Assistant OS.
-2. Write to the SSD, connect SSD to a blue USB3 port, boot.
+1. Download the generic x86-64 HAOS image from
+   https://www.home-assistant.io/installation/generic-x86-64/
+   (the `haos_generic-x86-64-*.img.zst` file).
+2. Boot the PC from a Ubuntu live USB ("Try Ubuntu", no install needed).
+3. Identify the internal disk with `lsblk` — typically `/dev/nvme0n1` (NVMe)
+   or `/dev/sda` (SATA SSD). Confirm the size matches the drive you intend.
+4. Write the image directly to that disk (substitute your real device):
+   ```bash
+   zstdcat haos_generic-x86-64-*.img.zst | sudo dd of=/dev/nvme0n1 bs=4M status=progress
+   ```
+5. In BIOS/UEFI: enable **UEFI boot**, disable **Secure Boot**, and set the
+   internal disk as the boot device. Power off the PC and remove the USB stick.
+6. Boot from the internal disk.
 
 ## First boot and onboarding
 
