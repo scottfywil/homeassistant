@@ -16,8 +16,8 @@ unrelated to HubWise systems.
 
 | Decision | Choice |
 |---|---|
-| HA platform | Home Assistant OS (generic x86-64) bare-metal on a dedicated always-on PC, wiping Windows |
-| Zigbee | Zigbee2MQTT + Mosquitto add-ons, Sonoff ZBDongle-E (or similar EFR32/CC2652) coordinator |
+| HA platform | Home Assistant OS (generic x86-64) bare-metal on an HP EliteDesk 800 G3 Desktop Mini (512 GB), wiping Windows |
+| Zigbee | Zigbee2MQTT + Mosquitto add-ons; "Zigbee 3.0 USB Dongle Plus" MG24 coordinator (Silicon Labs EFR32MG24, `ember` adapter) |
 | Alexa | Nabu Casa (Home Assistant Cloud, $6.50/mo) — exposes HA entities to Alexa, provides remote access |
 | ESP32 firmware | ESPHome (YAML-defined, OTA, auto-discovery) |
 | Deploy flow | HA pulls from GitHub (Git Pull add-on); repo is source of truth |
@@ -43,7 +43,7 @@ unrelated to HubWise systems.
 GitHub repo ──(Git Pull add-on)──> HAOS box
                                      ├── Home Assistant Core (config/)
                                      ├── Mosquitto (MQTT broker)
-                                     ├── Zigbee2MQTT ── ZBDongle-E ── Zigbee devices
+                                     ├── Zigbee2MQTT ── MG24 dongle ── Zigbee devices
                                      ├── ESPHome ──(OTA/API)── ESP32 boards
                                      ├── Tailscale (admin access)
                                      └── Nabu Casa cloud ── Alexa / remote UI

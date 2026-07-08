@@ -11,8 +11,12 @@ mqtt:
   password: '!secret mqtt_password'
 
 serial:
+  # "Zigbee 3.0 USB Dongle Plus" MG24 (Silicon Labs EFR32MG24).
+  # Verify the real path on the box (Settings > System > Hardware) and prefer
+  # the stable by-id path — MG24 dongles usually enumerate as ttyACM0, some as
+  # ttyUSB0 depending on the USB-serial chip.
   port: /dev/ttyACM0
-  adapter: ember  # Sonoff ZBDongle-E (EFR32). Use 'zstack' for ZBDongle-P/CC2652.
+  adapter: ember
 
 frontend:
   enabled: true

@@ -11,8 +11,8 @@ clones it onto the HAOS box; push to GitHub and the box updates itself.
 
 | Layer | Choice |
 |---|---|
-| Platform | Home Assistant OS (generic x86-64) bare-metal on a dedicated always-on PC |
-| Zigbee | Zigbee2MQTT + Mosquitto add-ons, Sonoff ZBDongle-E coordinator |
+| Platform | Home Assistant OS (generic x86-64) bare-metal on an HP EliteDesk 800 G3 Desktop Mini |
+| Zigbee | Zigbee2MQTT + Mosquitto add-ons, "Zigbee 3.0 USB Dongle Plus" MG24 (EFR32MG24) coordinator |
 | ESP32 boards | ESPHome (YAML firmware, OTA, auto-discovery) |
 | Voice / remote | Nabu Casa (Home Assistant Cloud) → Alexa |
 | Admin access | Tailscale add-on |

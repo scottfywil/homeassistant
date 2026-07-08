@@ -16,7 +16,7 @@ All add-ons: Settings → Add-ons → Add-on Store. For each one below, enable
 
 ## 2. Zigbee2MQTT
 
-1. Plug in the ZBDongle-E **on the USB extension cable**, into a USB 2.0 port.
+1. Plug the MG24 dongle **on the USB extension cable**, into a rear USB-A port.
 2. Find the adapter path: Settings → System → Hardware → All Hardware → look
    for `ttyACM0`/`ttyUSB0`. Prefer the stable `/dev/serial/by-id/...` path.
 3. Install **Zigbee2MQTT** (add repository
