@@ -86,7 +86,35 @@ Work through these during setup (runbook 04):
       monitored contract.
 - [ ] Garage openers — not smart / MyQ irrelevant: the `garage-relay` board
       wired to the opener terminals is the plan.
-- [ ] Echo devices — count and rooms: ____ (voice via Nabu Casa, runbook 03)
+- [ ] **LG webOS TV (2025, Living Room)** → `webostv` integration — local,
+      power/volume/app control; great for "movie mode" scenes.
+- [ ] **Fire TV devices (many)** → `androidtv` integration per device as
+      wanted; not a priority.
+- [ ] **eero Pro 7 mesh (×2)** — the network itself. No official HA
+      integration; use the eero app for the DHCP reservations this project
+      needs (HA box, every ESP32 board). Old eero 2nd-gens are retired.
+
+## Echo fleet (voice endpoints via Nabu Casa)
+
+Active in-home units and where they sit — these become the rooms where
+voice control must work well (assign matching Alexa groups):
+
+| Echo | Location |
+|---|---|
+| Echo 4th gen | Primary bedroom |
+| Echo Dot 5th gen ×2 | Kids' bedrooms |
+| Echo 4th gen | Basement rec room |
+| Echo Dot 3rd gen | Workout room |
+| Echo Dot | Garage |
+| Echo Show 8 | Main floor (confirm room) |
+| Echo Show 5 | Confirm room |
+| Echo 4th gen ("Red") | Confirm room |
+| Echo Dot | Patio |
+| Echo Dot 3rd gen | Outside bar |
+
+Not in scope: two camper units, two work units, three retired/dead Dots.
+An Echo's built-in Zigbee radio may currently host some Hue bulbs — those
+re-pair to Zigbee2MQTT during setup (runbook 04).
 
 ## Z-Wave (locks)
 
