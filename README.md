@@ -44,6 +44,7 @@ Follow the runbooks in order:
 4. [Pair devices](docs/04-pairing-devices.md)
 5. [Build a new ESP32 board](docs/05-new-esp32-board.md)
 6. [Backups](docs/06-backups.md)
+7. [Home layout and coverage plan](docs/07-home-layout.md)
 
 ## Secrets
 
