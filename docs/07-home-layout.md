@@ -61,15 +61,48 @@ easier than ESP32 boards in bathrooms; wire the automation in
 
 ## Existing devices to integrate
 
-Fill in exact models during setup (runbook 04) and check them off:
+Work through these during setup (runbook 04):
 
-- [ ] WiFi plugs/bulbs — brand(s): ____ → native integration or LocalTuya
-- [ ] Smart thermostat — brand: ____ → Nest / ecobee / Honeywell integration
-- [ ] Video doorbell / cameras — brand: ____ → Ring / Wyze integration (cloud)
-- [ ] Smart lock(s) — brand: ____ → check native vs cloud integration
-- [ ] Garage opener if already smart (e.g. MyQ) — note: MyQ blocks HA;
-      prefer the `garage-relay` board wired to the opener terminals instead
+- [ ] **Wyze** plugs/bulbs → Wyze integration (API key). Wyze *cams* are
+      Alexa-only for now — don't build automations on them.
+- [ ] **Tuya / Smart Life** plugs/bulbs → official Tuya integration first;
+      migrate to LocalTuya (HACS) later for local control.
+- [ ] **Philips Hue** — bridge bulbs stay on the **Hue Bridge** (local HA
+      integration, excellent). Bulbs paired directly to an **Echo's Zigbee**
+      get re-paired to Zigbee2MQTT (Echo loses direct pairing; voice keeps
+      working via Nabu Casa).
+- [ ] **Nest thermostat** → Google Device Access (one-time $5 developer
+      registration); same project also covers Nest cameras/doorbell.
+- [ ] **Cameras**: Ring → `ring` integration (events/motion, cloud);
+      Nest → same Device Access project as thermostat; Blink → `blink`
+      integration (cloud); Wyze cams → skip (above).
+- [ ] **Kwikset 892 locks (Z-Wave)** → via Z-Wave radio, see below.
+- [ ] **SmartThings hubs (×2)** → SmartThings integration (cloud) as the
+      interim bridge for anything already paired to them; retire after
+      Z-Wave migration.
+- [ ] **Vivint security system + cameras** → community `vivint` integration
+      via HACS (cloud). Read/monitor first (sensor states are great automation
+      triggers); leave arming/monitoring behavior alone — it's a professionally
+      monitored contract.
+- [ ] Garage openers — not smart / MyQ irrelevant: the `garage-relay` board
+      wired to the opener terminals is the plan.
 - [ ] Echo devices — count and rooms: ____ (voice via Nabu Casa, runbook 03)
+
+## Z-Wave (locks)
+
+The Kwikset 892s are Z-Wave — a third radio alongside WiFi and Zigbee.
+Two-phase plan:
+
+1. **Interim:** leave the locks paired to a SmartThings hub; HA sees them
+   through the SmartThings cloud integration. Works day one, but lock
+   control depends on two clouds.
+2. **Target:** add a **Z-Wave USB stick** (Zooz ZST39 800-series, ~$35) +
+   the **Z-Wave JS** add-on, re-pair the locks locally (S2 security), retire
+   the SmartThings hubs. Locks are exactly the device class that should not
+   depend on cloud round-trips.
+
+The stick shares the same USB-extension-cable rule as the Zigbee dongle —
+and keep the two radios on separate extension cables, apart from each other.
 
 ## Automation ideas grounded in this layout
 

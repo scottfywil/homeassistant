@@ -18,6 +18,7 @@ unrelated to HubWise systems.
 |---|---|
 | HA platform | Home Assistant OS (generic x86-64) bare-metal on an HP EliteDesk 800 G3 Desktop Mini (512 GB), wiping Windows |
 | Zigbee | Zigbee2MQTT + Mosquitto add-ons; "Zigbee 3.0 USB Dongle Plus" MG24 coordinator (Silicon Labs EFR32MG24, `ember` adapter) |
+| Z-Wave | Kwikset 892 locks: interim via SmartThings cloud integration; target Z-Wave JS add-on + 800-series USB stick, then retire SmartThings hubs |
 | Alexa | Nabu Casa (Home Assistant Cloud, $6.50/mo) — exposes HA entities to Alexa, provides remote access |
 | ESP32 firmware | ESPHome (YAML-defined, OTA, auto-discovery) |
 | Deploy flow | HA pulls from GitHub (Git Pull add-on); repo is source of truth |
