@@ -20,7 +20,7 @@ Areas power Alexa groups ("turn off the basement lights") and dashboards.
 |---|---|
 | Basement | Rec Room, Workout Room, Basement Bath, Mechanical |
 | Main | Kitchen, Dinette, Great Room, Dining Room, Half Bath, Laundry, Mudroom, Garage |
-| Upper | Primary Bedroom, Primary Bath, Bedroom 2, Bedroom 3, Bedroom 4, Hall Bath |
+| Upper | Primary Bedroom, Primary Bath, Bedroom 2, Bedroom 3, Office (bedroom 4), Hall Bath |
 
 ## Radio coverage plan
 
@@ -106,9 +106,9 @@ voice control must work well (assign matching Alexa groups):
 | Echo 4th gen | Basement rec room |
 | Echo Dot 3rd gen | Workout room |
 | Echo Dot | Garage |
-| Echo Show 8 | Main floor (confirm room) |
-| Echo Show 5 | Confirm room |
-| Echo 4th gen ("Red") | Confirm room |
+| Echo Show 8 | Kitchen |
+| Echo Show 5 | Office (bedroom 4, upstairs) |
+| Echo 4th gen ("Red") | Great Room (main-level living room) |
 | Echo Dot | Patio |
 | Echo Dot 3rd gen | Outside bar |
 
