@@ -13,7 +13,10 @@ Also needed:
   away from the PC's USB3/RF interference; plug the dongle into a rear
   **USB-A** port via the cable, not directly).
 - **Wired Ethernet** into the EliteDesk's RJ45 port.
-- A spare USB stick (≥2 GB) to boot a live Linux for flashing.
+- The prepared **Ventoy USB stick** (≥8 GB): boots Ubuntu live AND carries the
+  HAOS image as a file — one stick does both jobs. (Build it with Ventoy on
+  any machine: install Ventoy to the stick, then copy the Ubuntu desktop ISO
+  and the `haos_generic-x86-64-*.img.xz` onto it as plain files.)
 - USB keyboard + a monitor (DisplayPort or VGA — the G3 DM has both) for the
   BIOS steps.
 
@@ -32,20 +35,22 @@ Also needed:
 
 ## Flash
 
-1. On any working computer, download the generic x86-64 HAOS image from
-   https://www.home-assistant.io/installation/generic-x86-64/
-   (the `haos_generic-x86-64-*.img.zst` file).
-2. Insert the Ubuntu live USB into the EliteDesk, power on, and tap **F9** to
-   open the one-time boot menu → choose the USB stick → **"Try Ubuntu"**
-   (no install needed). Make sure you have the HAOS `.img.zst` reachable
-   (on a second USB stick or downloadable over Ethernet from Ubuntu).
+1. Insert the Ventoy USB into the EliteDesk, power on, and tap **F9** to open
+   the one-time boot menu → choose the USB stick → pick the **Ubuntu** ISO in
+   the Ventoy menu → **"Try Ubuntu"** (no install needed).
+2. Open a terminal. The Ventoy stick auto-mounts (usually under
+   `/media/ubuntu/Ventoy`); the HAOS image is on it:
+   ```bash
+   cd /media/ubuntu/Ventoy
+   ls haos_generic-x86-64-*.img.xz
+   ```
 3. Identify the internal disk with `lsblk` — on the G3 DM it's `/dev/nvme0n1`
    (M.2 NVMe) or `/dev/sda` (2.5" SATA SSD). Confirm the ~512 GB size matches.
 4. Write the image directly to that disk (substitute your real device):
    ```bash
-   zstdcat haos_generic-x86-64-*.img.zst | sudo dd of=/dev/nvme0n1 bs=4M status=progress
+   xzcat haos_generic-x86-64-*.img.xz | sudo dd of=/dev/nvme0n1 bs=4M status=progress
    ```
-5. Power off, remove both USB sticks, plug in the Zigbee dongle (via the USB
+5. Power off, remove the USB stick, plug in the Zigbee dongle (via the USB
    extension cable) and Ethernet, then power on. Tap **F9** and boot the
    internal disk (or set it first in BIOS boot order via F10).
 
