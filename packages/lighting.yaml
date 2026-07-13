@@ -1,5 +1,6 @@
-# Motion-activated lighting driven by the office-sensor ESP32 board.
-# Clone this pattern per room; swap entity IDs.
+# Presence lighting driven by the office multisensor ESP32 board:
+# PIR = instant ON, mmWave radar = honest OFF (holds while someone sits still).
+# Clone this pattern per room; swap entity IDs. (docs/08-presence-sensors.md)
 automation:
   - alias: "Lighting - Office on motion when dark"
     id: lighting_office_motion_on
@@ -16,13 +17,13 @@ automation:
         target:
           entity_id: light.office
 
-  - alias: "Lighting - Office off after 10 min no motion"
-    id: lighting_office_motion_off
+  - alias: "Lighting - Office off when presence clears"
+    id: lighting_office_presence_off
     triggers:
       - trigger: state
-        entity_id: binary_sensor.office_sensor_motion
+        entity_id: binary_sensor.office_sensor_presence
         to: "off"
-        for: "00:10:00"
+        for: "00:05:00"
     actions:
       - action: light.turn_off
         target:

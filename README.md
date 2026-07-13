@@ -45,6 +45,7 @@ Follow the runbooks in order:
 5. [Build a new ESP32 board](docs/05-new-esp32-board.md)
 6. [Backups](docs/06-backups.md)
 7. [Home layout and coverage plan](docs/07-home-layout.md)
+8. [Presence sensors: build plan and BOM](docs/08-presence-sensors.md)
 
 ## Secrets
 

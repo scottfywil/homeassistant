@@ -1,5 +1,7 @@
-# Room multi-sensor: BME280 (temp/humidity/pressure), BH1750 (lux), PIR motion.
-# Also acts as a Bluetooth proxy.
+# Room multisensor — the standard per-room board (see docs/08-presence-sensors.md).
+# LD2410C mmWave presence + AM312 PIR (fast trigger) + BME280 (temp/humidity/
+# pressure) + BH1750 (lux). Also acts as a Bluetooth proxy.
+# Clone per room: change the three substitutions, flash, done.
 substitutions:
   device_name: office-sensor
   friendly_name: Office Sensor
@@ -14,7 +16,33 @@ i2c:
   scl: GPIO22
   scan: true
 
+# LD2410C radar on UART2
+uart:
+  id: ld2410_uart
+  tx_pin: GPIO17
+  rx_pin: GPIO16
+  baud_rate: 256000
+
+ld2410:
+  uart_id: ld2410_uart
+
+binary_sensor:
+  - platform: ld2410
+    has_target:
+      name: Presence
+    has_moving_target:
+      name: Moving Target
+    has_still_target:
+      name: Still Target
+  - platform: gpio
+    pin: GPIO27
+    name: Motion
+    device_class: motion
+
 sensor:
+  - platform: ld2410
+    detection_distance:
+      name: Detection Distance
   - platform: bme280_i2c
     address: 0x76
     update_interval: 60s
@@ -29,8 +57,12 @@ sensor:
     address: 0x23
     update_interval: 30s
 
-binary_sensor:
-  - platform: gpio
-    pin: GPIO27
-    name: Motion
-    device_class: motion
+# Radar tuning from HA — no reflashing needed to adjust per room
+number:
+  - platform: ld2410
+    timeout:
+      name: Radar Timeout
+    max_move_distance_gate:
+      name: Radar Max Moving Gate
+    max_still_distance_gate:
+      name: Radar Max Still Gate

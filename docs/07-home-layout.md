@@ -51,8 +51,8 @@ build-out order:
 | `ble-proxy-main` | ble-proxy-hallway.yaml | Main floor, central |
 | `ble-proxy-upper` | ble-proxy-hallway.yaml | Upstairs hall landing |
 | `mechanical-sensor` | office-sensor.yaml | Mechanical room: temp/humidity; add a water-leak sensor input (GPIO + probe) near the water heater/sump |
-| `rec-room-sensor` | office-sensor.yaml | Basement rec room: temp/humidity/motion/lux |
-| room sensors ×N | office-sensor.yaml | One per occupied room as needed: Great Room, Kitchen, Primary, bedrooms, workout room |
+| `rec-room-sensor` | office-sensor.yaml | Basement rec room: presence/climate/lux multisensor |
+| room multisensors ×N | office-sensor.yaml | mmWave presence + climate per sit-still room — see [08-presence-sensors.md](08-presence-sensors.md) for the room plan and BOM |
 
 Bathroom humidity (shower → fan automation) targets: Primary Bath, Hall
 Bath, Basement Bath — Zigbee temp/humidity sensors (e.g. Aqara/Sonoff) are
