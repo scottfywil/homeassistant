@@ -76,10 +76,11 @@ Work through these during setup (runbook 04):
 - [ ] **Cameras**: Ring → `ring` integration (events/motion, cloud);
       Nest → same Device Access project as thermostat; Blink → `blink`
       integration (cloud); Wyze cams → skip (above).
-- [ ] **Kwikset 892 locks (Z-Wave)** → via Z-Wave radio, see below.
-- [ ] **SmartThings hubs (×2)** → SmartThings integration (cloud) as the
-      interim bridge for anything already paired to them; retire after
-      Z-Wave migration.
+- [ ] **Kwikset 892 locks (Z-Wave)** → Z-Wave JS + Sonoff Dongle-PZG23,
+      see below.
+- [ ] **SmartThings hubs (×2)** → retire. If anything besides the locks is
+      still paired to them, inventory it first; the SmartThings cloud
+      integration can bridge stragglers temporarily.
 - [ ] **Vivint security system + cameras** → community `vivint` integration
       via HACS (cloud). Read/monitor first (sensor states are great automation
       triggers); leave arming/monitoring behavior alone — it's a professionally
@@ -119,18 +120,23 @@ re-pair to Zigbee2MQTT during setup (runbook 04).
 ## Z-Wave (locks)
 
 The Kwikset 892s are Z-Wave — a third radio alongside WiFi and Zigbee.
-Two-phase plan:
 
-1. **Interim:** leave the locks paired to a SmartThings hub; HA sees them
-   through the SmartThings cloud integration. Works day one, but lock
-   control depends on two clouds.
-2. **Target:** add a **Z-Wave USB stick** (Zooz ZST39 800-series, ~$35) +
-   the **Z-Wave JS** add-on, re-pair the locks locally (S2 security), retire
-   the SmartThings hubs. Locks are exactly the device class that should not
-   depend on cloud round-trips.
+**Radio: Sonoff Dongle-PZG23** (Silicon Labs EFR32ZG23, Z-Wave 800 series,
+**US frequency / 908.42 MHz** — region-locked, EU variant won't work) +
+the **Z-Wave JS** add-on. HA 2025.12.2+ auto-discovers the dongle.
 
-The stick shares the same USB-extension-cable rule as the Zigbee dongle —
-and keep the two radios on separate extension cables, apart from each other.
+Plan: exclude the locks from the SmartThings hub(s), pair them to Z-Wave JS
+(892s are S0-only — fine for locks), then retire both SmartThings hubs.
+No cloud in the lock path.
+
+Notes:
+- The 892 must be paired **within a few feet of the controller** (S0
+  inclusion is low-power) — either carry the EliteDesk near the door once,
+  or pair before final rack placement in the basement.
+- Same placement rule as Zigbee: dongle on its USB extension cable
+  (included), USB 2.0 port, and keep the Z-Wave and Zigbee dongles apart
+  from each other. The adjustable external antenna helps reach the
+  upstairs locks from the basement.
 
 ## Automation ideas grounded in this layout
 
