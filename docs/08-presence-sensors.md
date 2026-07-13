@@ -29,7 +29,7 @@ stay on for a person reading in a chair — the thing PIR can't do.
 | BH1750 breakout | I2C light sensor | $2 | $5 |
 | AM312 mini PIR | 3.3 V logic, low false-trigger (skip HC-SR501) | $2 | $5 |
 | USB power supply + cable | Any 5 V/1 A wart + USB cable | $3 | $6 |
-| Enclosure | 3D print (community STLs exist) or small vented project box | $2 | $4 |
+| Enclosure | 3D print — STLs + parametric source in [`hardware/enclosure/`](../hardware/enclosure/) | $2 | $4 |
 | Perfboard, headers, wire | consumables | $1 | $2 |
 | **Total per room** | | **~$23** | **~$46** |
 
