@@ -37,6 +37,8 @@ stay on for a person reading in a chair — the thing PIR can't do.
 7× BME280, 7× BH1750, 7× AM312 — modules are cheap enough that one spare
 of everything is worth it. AliExpress ≈ $160 total, Amazon ≈ $300.
 Multi-packs (ESP32 3-packs, sensor 5-packs) close most of the Amazon gap.
+Specific Amazon listings with links:
+[`hardware/enclosure/BOM-amazon.md`](../hardware/enclosure/BOM-amazon.md).
 
 Buy separately (Zigbee, no build): ~4× Sonoff SNZB-03P PIR (~$12 ea),
 3× Sonoff SNZB-02D temp/humidity (~$13 ea).
