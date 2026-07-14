@@ -41,7 +41,7 @@ Mosquitto · Zigbee2MQTT (MG24, network up, ch 20) · ESPHome Device Builder
 | Blink | 6 | cloud; cams Back/Front Yard, Living Room, Basement, Camper + sync module. Camper out of scope |
 | Tuya / Smart Life | 11 | cloud; user-code flow. Mostly outdoor plugs/switches (see area notes) |
 | Google Nest | 2 (6 entities) | Family Room thermostat → Great Room; Garage camera → Garage. SDM + Pub/Sub events enabled. See setup notes below |
-| Vivint (HACS: `natekspencer/ha-vivint`) | 17 (68 entities) | cloud; user/pass + MFA. **Read-only posture** (pro-monitored). Cameras, door/window + glass-break + motion sensors, 2 Kwikset locks, garage doors. Vivint pre-mapped some to Areas. See Vivint notes below |
+| Vivint (HACS: `natekspencer/ha-vivint`) | 13 active (of 17; 4 disabled) | cloud; user/pass + MFA. **Read-only posture** (pro-monitored). Alarm panel, 2 Kwikset locks, door/window + glass-break + motion sensors, cameras. Garage (×3) + duplicate Nest disabled — see Vivint notes below. Vivint pre-mapped some to Areas |
 | MQTT / Zigbee2MQTT Bridge | — | infra |
 
 ### Nest / Google Device Access setup (for the record)
@@ -79,24 +79,32 @@ Mosquitto · Zigbee2MQTT (MG24, network up, ch 20) · ESPHome Device Builder
   `alarm_control_panel` (arm/disarm) plus lock/garage/climate controls regardless.
   Rule: no arming/disarming automations; don't expose the alarm panel (or locks)
   to Alexa in the exposure pass.
-- ⚠️ **Kwikset locks + garage doors come in via Vivint** (Front Door "Smart Code 910",
-  Mudroom "Door Lock 912", Scott/Megan garage). They're Z-Wave devices paired to the
-  **Vivint panel**. This changes the [07](07-home-layout.md) Z-Wave plan (item below):
-  moving them to HA's own Z-Wave JS means **unpairing from the Vivint panel** (may
-  disrupt Vivint monitoring). Decide keep-via-Vivint vs. go-local before pairing.
-- ⚠️ **Possible Nest duplicate**: Vivint surfaced a "Family Room (Nest)" device;
-  the Nest is already integrated directly. Disable the Vivint-side climate entity
-  to avoid a duplicate.
+- **Kept on Vivint (by decision):** the alarm panel (`alarm_control_panel.wilson_home`),
+  the **Kwikset locks** (`lock.front_door` "Smart Code 910", `lock.mudroom_door` "912"),
+  door/window + glass-break + motion sensors, cameras. Locks **stay on Vivint** — they're
+  tied to the monitored alarm, so **no local Z-Wave migration** (cancels the old item #5
+  lock re-pair plan).
+- **Dropped from HA (disabled via device registry, `disabled_by: user`, 2026-07-14):**
+  - 3 garage devices — **Scott's Garage** (NGD00Z-4, was offline), **Megan Garage Door**,
+    **Scott Garage Door**. The old Vivint Z-Wave garage controllers were **replaced by MyQ**
+    and are no longer used via Vivint. (Ghost devices may still linger on the Vivint panel —
+    remove at the source in the Vivint app if desired.)
+  - **Family Room (Nest)** — duplicate of the directly-integrated Nest. Direct Nest
+    thermostat (`climate.family_room_family_room`) is retained.
+  - Vivint enabled device count: **13** (down from 17). Re-enable any via the device page.
 
 ## Pending — each needs a credential/account from the user
 
 - **EISI-NAS01** (192.168.7.10, discovered) — parked; different subnet.
 - **Cloud accounts** still to add: **Ring**, **Wyze**. (Tuya, Blink, Nest, Vivint ✅ done.)
-- **Z-Wave** — awaiting the Sonoff Dongle-PZG23 purchase; then Z-Wave JS. **Note:**
-  the Kwikset 892 locks + garage doors are **already available via Vivint** (paired
-  to the Vivint panel) — going local means unpairing from Vivint first. Decide
-  keep-via-Vivint vs. go-local before pairing (see Vivint notes above +
-  [07-home-layout.md](07-home-layout.md)).
+- **Z-Wave** — Sonoff Dongle-PZG23 still pending, but the original driver (Kwikset 892
+  lock re-pair) is **cancelled**: locks stay on Vivint (tied to the alarm), garage is
+  MyQ. Keep the dongle around only if/when a genuinely local Z-Wave device shows up;
+  no Vivint hardware to migrate.
+- **Garage doors** — now **MyQ** (replaced the old Vivint Z-Wave controllers). Not yet
+  in HA. If HA control/status is wanted, that's a separate MyQ path (note: Chamberlain
+  has historically blocked third-party MyQ access — the [07](07-home-layout.md)
+  `garage-relay` ESP32 board may be the more reliable route). Undecided; parked.
 
 ## Device → Area assignment
 

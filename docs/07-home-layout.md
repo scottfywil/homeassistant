@@ -76,17 +76,23 @@ Work through these during setup (runbook 04):
 - [ ] **Cameras**: Ring → `ring` integration (events/motion, cloud);
       Nest → same Device Access project as thermostat; Blink → `blink`
       integration (cloud); Wyze cams → skip (above).
-- [ ] **Kwikset 892 locks (Z-Wave)** → Z-Wave JS + Sonoff Dongle-PZG23,
-      see below.
-- [ ] **SmartThings hubs (×2)** → retire. If anything besides the locks is
-      still paired to them, inventory it first; the SmartThings cloud
-      integration can bridge stragglers temporarily.
-- [ ] **Vivint security system + cameras** → community `vivint` integration
-      via HACS (cloud). Read/monitor first (sensor states are great automation
-      triggers); leave arming/monitoring behavior alone — it's a professionally
-      monitored contract.
-- [ ] Garage openers — not smart / MyQ irrelevant: the `garage-relay` board
-      wired to the opener terminals is the plan.
+- [~] **Door locks** — the front-door and mudroom Kwikset locks now come in via
+      **Vivint** (models "SmartCode 910" + "Door Lock 912") and, by decision (2026-07-14),
+      **stay on Vivint** (tied to the monitored alarm). The Z-Wave-JS migration below is
+      therefore **on hold / likely cancelled**. ⚠️ **OPEN Q:** are these the same physical
+      locks the plan called "Kwikset 892 on SmartThings", or are there separate 892s still
+      on SmartThings? Confirm before touching SmartThings.
+- [ ] **SmartThings hubs (×2)** → retire. **Blocked on the open question above** — if the
+      locks were the only thing on them, they may already be retireable; inventory first.
+      The SmartThings cloud integration can bridge stragglers temporarily.
+- [x] **Vivint security system + cameras** → `natekspencer/ha-vivint` via HACS (cloud),
+      done 2026-07-14. Read-only posture (arming left alone). Garage controllers (old
+      Vivint Z-Wave, now MyQ) and a duplicate Nest were disabled; locks/alarm/sensors kept.
+      See [09-integrations-status.md](09-integrations-status.md).
+- [ ] **Garage openers** — now **MyQ** controllers (replaced the old Vivint Z-Wave
+      openers, which are disabled in HA). Not yet in HA. Options if control/status wanted:
+      MyQ integration (Chamberlain has blocked third-party access — unreliable) or the
+      `garage-relay` ESP32 board wired to the opener terminals. Undecided.
 - [ ] **LG webOS TV (2025, Living Room)** → `webostv` integration — local,
       power/volume/app control; great for "movie mode" scenes.
 - [ ] **Fire TV devices (many)** → `androidtv` integration per device as
@@ -118,6 +124,13 @@ An Echo's built-in Zigbee radio may currently host some Hue bulbs — those
 re-pair to Zigbee2MQTT during setup (runbook 04).
 
 ## Z-Wave (locks)
+
+> ⚠️ **On hold as of 2026-07-14.** The door locks now come in via **Vivint** (SmartCode
+> 910 + Door Lock 912) and, by decision, **stay on Vivint** (tied to the monitored alarm).
+> This local-Z-Wave lock migration is likely cancelled. Kept for reference pending the
+> open question of whether these are the same locks the plan called "892 on SmartThings."
+> Garage doors are **not** part of this (they're MyQ now, not Z-Wave). The PZG23 dongle is
+> only worth pursuing if a genuinely local Z-Wave device turns up later.
 
 The Kwikset 892s are Z-Wave — a third radio alongside WiFi and Zigbee.
 
