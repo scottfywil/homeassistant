@@ -103,10 +103,11 @@ Mosquitto · Zigbee2MQTT (MG24, network up, ch 20) · ESPHome Device Builder
   PZG23 dongle / Z-Wave JS is not needed unless a future local Z-Wave device appears.
 - **SmartThings hubs (×2)** — now **unblocked for retirement** (locks confirmed on Vivint,
   not SmartThings). Inventory anything else still paired first (see [07](07-home-layout.md)).
-- **Garage doors** — now **MyQ** (replaced the old Vivint Z-Wave controllers). Not yet
-  in HA. If HA control/status is wanted, that's a separate MyQ path (note: Chamberlain
-  has historically blocked third-party MyQ access — the [07](07-home-layout.md)
-  `garage-relay` ESP32 board may be the more reliable route). Undecided; parked.
+- **Garage doors** — controlled by **MyQ** (replaced the old Vivint Z-Wave controllers,
+  now disabled). **No cloud path** — HA's MyQ integration was removed in 2023.12 and
+  Chamberlain blocks 3rd-party access. Local path if HA control wanted: **ratgdo** ESPHome
+  board wired to the opener (= the `garage-relay` plan in [07](07-home-layout.md)). Needs
+  hardware; undecided/parked.
 
 ## Device → Area assignment
 

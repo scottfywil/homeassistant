@@ -88,10 +88,14 @@ Work through these during setup (runbook 04):
       done 2026-07-14. Read-only posture (arming left alone). Garage controllers (old
       Vivint Z-Wave, now MyQ) and a duplicate Nest were disabled; locks/alarm/sensors kept.
       See [09-integrations-status.md](09-integrations-status.md).
-- [ ] **Garage openers** — now **MyQ** controllers (replaced the old Vivint Z-Wave
-      openers, which are disabled in HA). Not yet in HA. Options if control/status wanted:
-      MyQ integration (Chamberlain has blocked third-party access — unreliable) or the
-      `garage-relay` ESP32 board wired to the opener terminals. Undecided.
+- [ ] **Garage openers** — controlled by **MyQ** (replaced the old Vivint Z-Wave openers,
+      now disabled in HA). **No cloud path:** HA's MyQ integration was removed in 2023.12
+      and Chamberlain blocks third-party API access — do not pursue a cloud MyQ integration.
+      **Local path = the plan:** wire a board to the opener control terminals. Recommended
+      **[ratgdo](https://paulwieland.github.io/ratgdo/)** (purpose-built ESPHome board,
+      Security+ 2.0 compatible, local control + status, MyQ app keeps working) — a
+      productized version of the `garage-relay` board in the ESPHome table above. Needs
+      hardware. Undecided whether to pursue.
 - [ ] **LG webOS TV (2025, Living Room)** → `webostv` integration — local,
       power/volume/app control; great for "movie mode" scenes.
 - [ ] **Fire TV devices (many)** → `androidtv` integration per device as
