@@ -96,7 +96,24 @@ Mosquitto · Zigbee2MQTT (MG24, network up, ch 20) · ESPHome Device Builder
 ## Pending — each needs a credential/account from the user
 
 - **EISI-NAS01** (192.168.7.10, discovered) — parked; different subnet.
-- **Cloud accounts** still to add: **Ring**, **Wyze**. (Tuya, Blink, Nest, Vivint ✅ done.)
+- **Cloud accounts**: Tuya, Blink, Nest, Vivint ✅ done. **Ring dropped** (no Ring).
+  **Wyze ⚠️ installed but blocked** — see note below.
+
+### Wyze note (blocked, parked 2026-07-14)
+- Integration `SecKatie/ha-wyzeapi` (default HACS store, **v0.1.38**) installed; config
+  entry created (email/password + developer **API Key + Key ID** all accepted — auth is fine).
+- **Setup fails** with a TLS cert error on the first data call:
+  `ClientConnectorCertificateError … CERTIFICATE_VERIFY_FAILED: unable to get local issuer
+  certificate` → `api.wyzecam.com:443` (in `wyzeapy`). Integration mislabels it "network issues".
+- **Not credentials, not the network:** `curl https://api.wyzecam.com/` **from the SSH add-on**
+  verifies the cert fine (HTTP 403, `ssl_verify_result=0`). Failure is **specific to the Core
+  container's Python SSL** (curl ran in a different container — exact mechanism unconfirmed).
+  Box is on **Python 3.14** (bleeding-edge) → a `wyzeapy`-vs-3.14 SSL regression is a live suspect.
+- **Entry disabled** (`Disabled by user`) to stop the retry loop; API key preserved — one-click
+  **Enable** to retry once there's a fix.
+- **To revisit later:** check for a newer ha-wyzeapi release / recent issues mentioning HAOS
+  or Python 3.14; ground-truth the chain with `openssl s_client -showcerts api.wyzecam.com:443`
+  from the **Core** container; cameras would need a separate `docker-wyze-bridge` regardless.
 - **Z-Wave** — ❌ **cancelled.** The only driver (Kwikset lock re-pair) is dead: the
   910/912 locks are the house locks (confirmed same as the old "892"), stay on Vivint,
   and were never on SmartThings; garage is MyQ. **No local Z-Wave devices remain**, so the

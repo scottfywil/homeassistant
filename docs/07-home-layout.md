@@ -71,11 +71,15 @@ Work through these during setup (runbook 04):
       integration, excellent). Bulbs paired directly to an **Echo's Zigbee**
       get re-paired to Zigbee2MQTT (Echo loses direct pairing; voice keeps
       working via Nabu Casa).
-- [ ] **Nest thermostat** → Google Device Access (one-time $5 developer
-      registration); same project also covers Nest cameras/doorbell.
-- [ ] **Cameras**: Ring → `ring` integration (events/motion, cloud);
-      Nest → same Device Access project as thermostat; Blink → `blink`
-      integration (cloud); Wyze cams → skip (above).
+- [x] **Nest thermostat** → Google Device Access; done (see [09](09-integrations-status.md)).
+- [x] **Cameras**: **Ring dropped** (no Ring). Nest ✅ (Device Access, garage cam), Blink ✅
+      (`blink`, cloud). Vivint cameras ✅ via the Vivint integration. Wyze cams → skip
+      (need a separate `docker-wyze-bridge` for RTSP; not first-class).
+- [~] **Wyze bulbs/plugs/sensors** → HACS `SecKatie/ha-wyzeapi` (in the **default** HACS
+      store; v0.1.38). Installed + config entry created (API key + login accepted), but
+      **setup fails and it's disabled/parked** — see the Wyze note in
+      [09-integrations-status.md](09-integrations-status.md). Blocked on an SSL/TLS
+      verification error, not credentials or network.
 - [x] **Door locks** — the front-door and mudroom Kwikset locks come in via **Vivint**
       (models "SmartCode 910" + "Door Lock 912"; the earlier "892" label was loose — same
       physical locks, confirmed 2026-07-14). By decision they **stay on Vivint** (tied to
