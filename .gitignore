@@ -21,6 +21,13 @@ blueprints/
 image/
 www/community/
 
+# HACS + HACS-managed custom integrations (e.g. Vivint).
+# HACS self-updates and its components live on the box only, outside GitOps —
+# they must not be vendored/version-pinned in this repo. Untracked files
+# survive the Git pull add-on's pull/reset; this also keeps them out of any
+# future `git clean`.
+custom_components/
+
 # ESPHome build artifacts
 esphome/.esphome/
 .esphome/
