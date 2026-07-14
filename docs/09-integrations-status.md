@@ -97,10 +97,12 @@ Mosquitto · Zigbee2MQTT (MG24, network up, ch 20) · ESPHome Device Builder
 
 - **EISI-NAS01** (192.168.7.10, discovered) — parked; different subnet.
 - **Cloud accounts** still to add: **Ring**, **Wyze**. (Tuya, Blink, Nest, Vivint ✅ done.)
-- **Z-Wave** — Sonoff Dongle-PZG23 still pending, but the original driver (Kwikset 892
-  lock re-pair) is **cancelled**: locks stay on Vivint (tied to the alarm), garage is
-  MyQ. Keep the dongle around only if/when a genuinely local Z-Wave device shows up;
-  no Vivint hardware to migrate.
+- **Z-Wave** — ❌ **cancelled.** The only driver (Kwikset lock re-pair) is dead: the
+  910/912 locks are the house locks (confirmed same as the old "892"), stay on Vivint,
+  and were never on SmartThings; garage is MyQ. **No local Z-Wave devices remain**, so the
+  PZG23 dongle / Z-Wave JS is not needed unless a future local Z-Wave device appears.
+- **SmartThings hubs (×2)** — now **unblocked for retirement** (locks confirmed on Vivint,
+  not SmartThings). Inventory anything else still paired first (see [07](07-home-layout.md)).
 - **Garage doors** — now **MyQ** (replaced the old Vivint Z-Wave controllers). Not yet
   in HA. If HA control/status is wanted, that's a separate MyQ path (note: Chamberlain
   has historically blocked third-party MyQ access — the [07](07-home-layout.md)

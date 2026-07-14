@@ -76,15 +76,14 @@ Work through these during setup (runbook 04):
 - [ ] **Cameras**: Ring → `ring` integration (events/motion, cloud);
       Nest → same Device Access project as thermostat; Blink → `blink`
       integration (cloud); Wyze cams → skip (above).
-- [~] **Door locks** — the front-door and mudroom Kwikset locks now come in via
-      **Vivint** (models "SmartCode 910" + "Door Lock 912") and, by decision (2026-07-14),
-      **stay on Vivint** (tied to the monitored alarm). The Z-Wave-JS migration below is
-      therefore **on hold / likely cancelled**. ⚠️ **OPEN Q:** are these the same physical
-      locks the plan called "Kwikset 892 on SmartThings", or are there separate 892s still
-      on SmartThings? Confirm before touching SmartThings.
-- [ ] **SmartThings hubs (×2)** → retire. **Blocked on the open question above** — if the
-      locks were the only thing on them, they may already be retireable; inventory first.
-      The SmartThings cloud integration can bridge stragglers temporarily.
+- [x] **Door locks** — the front-door and mudroom Kwikset locks come in via **Vivint**
+      (models "SmartCode 910" + "Door Lock 912"; the earlier "892" label was loose — same
+      physical locks, confirmed 2026-07-14). By decision they **stay on Vivint** (tied to
+      the monitored alarm). The Z-Wave-JS lock migration below is **cancelled**.
+- [ ] **SmartThings hubs (×2)** → retire. The locks were the reason to keep them and are
+      now confirmed on Vivint (not SmartThings), so the hubs are **unblocked for retirement**
+      — just inventory anything else still paired first; the SmartThings cloud integration
+      can bridge stragglers temporarily.
 - [x] **Vivint security system + cameras** → `natekspencer/ha-vivint` via HACS (cloud),
       done 2026-07-14. Read-only posture (arming left alone). Garage controllers (old
       Vivint Z-Wave, now MyQ) and a duplicate Nest were disabled; locks/alarm/sensors kept.
@@ -125,12 +124,12 @@ re-pair to Zigbee2MQTT during setup (runbook 04).
 
 ## Z-Wave (locks)
 
-> ⚠️ **On hold as of 2026-07-14.** The door locks now come in via **Vivint** (SmartCode
-> 910 + Door Lock 912) and, by decision, **stay on Vivint** (tied to the monitored alarm).
-> This local-Z-Wave lock migration is likely cancelled. Kept for reference pending the
-> open question of whether these are the same locks the plan called "892 on SmartThings."
-> Garage doors are **not** part of this (they're MyQ now, not Z-Wave). The PZG23 dongle is
-> only worth pursuing if a genuinely local Z-Wave device turns up later.
+> ❌ **Cancelled 2026-07-14.** The door locks come in via **Vivint** (SmartCode 910 + Door
+> Lock 912 — same locks the plan loosely called "892") and, by decision, **stay on Vivint**
+> (tied to the monitored alarm). Confirmed they are not on SmartThings. Garage doors are
+> **not** part of this either (MyQ now, not Z-Wave). Net: no local Z-Wave devices remain —
+> the **PZG23 dongle / Z-Wave JS is not needed** unless a genuinely local Z-Wave device
+> turns up later. Section kept for historical rationale only.
 
 The Kwikset 892s are Z-Wave — a third radio alongside WiFi and Zigbee.
 
