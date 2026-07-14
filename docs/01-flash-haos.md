@@ -38,12 +38,17 @@ Also needed:
 1. Insert the Ventoy USB into the EliteDesk, power on, and tap **F9** to open
    the one-time boot menu → choose the USB stick → pick the **Ubuntu** ISO in
    the Ventoy menu → **"Try Ubuntu"** (no install needed).
-2. Open a terminal. The Ventoy stick auto-mounts (usually under
-   `/media/ubuntu/Ventoy`); the HAOS image is on it:
+2. Open a terminal and get the HAOS image. **Field note:** Ventoy holds its
+   exFAT partition locked while serving the ISO, so mounting it from the live
+   session usually fails ("already mounted or mount point busy"). Don't
+   fight it — just download the image over Ethernet instead:
    ```bash
-   cd /media/ubuntu/Ventoy
-   ls haos_generic-x86-64-*.img.xz
+   cd /tmp
+   wget https://github.com/home-assistant/operating-system/releases/download/18.1/haos_generic-x86-64-18.1.img.xz
    ```
+   (Check for a newer release; curl is not on the Ubuntu live image, wget is.
+   If you must use the stick's copy, `sudo mount -o ro /dev/sdX1 /mnt` works
+   only when Ventoy hasn't dm-mapped the partition.)
 3. Identify the internal disk with `lsblk` — on the G3 DM it's `/dev/nvme0n1`
    (M.2 NVMe) or `/dev/sda` (2.5" SATA SSD). Confirm the ~512 GB size matches.
 4. Write the image directly to that disk (substitute your real device):
