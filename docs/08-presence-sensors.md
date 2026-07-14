@@ -67,7 +67,7 @@ BH1750 needs a light window or exterior mounting.
 
 ## Firmware
 
-`esphome/devices/office-sensor.yaml` is the canonical multisensor config —
+`esphome/office-sensor.yaml` is the canonical multisensor config —
 LD2410C on UART2, radar tuning entities (timeout, gates) exposed to HA so
 per-room tuning needs no reflash. Clone it per room (runbook 05):
 change `device_name`/`friendly_name`, flash once over USB, OTA forever.

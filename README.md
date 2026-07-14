@@ -25,14 +25,16 @@ clones it onto the HAOS box; push to GitHub and the box updates itself.
 ├── configuration.yaml      # slim core; features live in packages/
 ├── packages/               # one YAML per feature area (system, lighting, climate…)
 ├── dashboards/             # git-managed Lovelace dashboards
-├── esphome/
-│   ├── common/             # shared board packages (base, ble_proxy)
-│   └── devices/            # one YAML per physical ESP32 board
-├── zigbee2mqtt/            # reference config for the Z2M add-on
-├── docs/                   # runbooks (start at 01)
+├── esphome/                # one YAML per physical ESP32 board
+│   └── common/             # shared board packages (base, ble_proxy)
+├── hardware/enclosure/     # 3D-printed multisensor case + Amazon BOM
+├── docs/                   # runbooks (start at 01) + Z2M reference config
 ├── secrets.yaml.example    # every required secret, documented
 └── .github/workflows/      # CI
 ```
+
+(`zigbee2mqtt/` exists on the box but is gitignored — it's the add-on's
+runtime data dir and holds the generated network key.)
 
 ## Quick start
 
@@ -50,7 +52,7 @@ Follow the runbooks in order:
 ## Secrets
 
 Copy `secrets.yaml.example` to `secrets.yaml` and fill in real values on the
-HA box (and to `esphome/devices/secrets.yaml` wherever you build firmware).
+HA box (and to `esphome/secrets.yaml` wherever you build firmware).
 Real secrets files are gitignored — never commit them. Regenerate the ESPHome
 API key (`openssl rand -base64 32`); the example value is a placeholder.
 

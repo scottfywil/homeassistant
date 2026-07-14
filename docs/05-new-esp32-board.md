@@ -7,7 +7,7 @@ restart button. Boards auto-discover in HA once online.
 
 ## 1. Create the config
 
-Copy the closest template in `esphome/devices/` and adjust:
+Copy the closest template in `esphome/` and adjust:
 
 ```yaml
 substitutions:

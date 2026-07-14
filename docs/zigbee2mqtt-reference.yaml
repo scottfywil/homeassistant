@@ -1,0 +1,28 @@
+# REFERENCE ONLY — the live config is /config/zigbee2mqtt/configuration.yaml
+# on the HA box, owned and rewritten by the Zigbee2MQTT add-on at runtime
+# (it merges in the add-on options and stores the generated network key,
+# which is why that whole directory is gitignored).
+#
+# As deployed 2026-07-13:
+# - mqtt: left ENTIRELY blank in the add-on options — the add-on
+#   authenticates to Mosquitto via Supervisor service credentials
+#   automatically. No MQTT username/password needed for the add-on.
+#   (The `wilsonbug` HA user in secrets.yaml is for external MQTT
+#   clients, not for the add-on.)
+# - serial: set in the ADD-ON options, not this file. MG24 enumerates as
+#   ttyUSB0; the stable path used is
+#   /dev/serial/by-id/usb-SONOFF_SONOFF_Dongle_Plus_MG24_<serial>-if00-port0
+#   with adapter `ember` (Silicon Labs EFR32MG24).
+homeassistant:
+  enabled: true
+
+frontend:
+  enabled: true
+  port: 8099
+
+permit_join: false
+
+advanced:
+  channel: 20
+  network_key: GENERATE  # add-on replaces with a real key on first start
+  last_seen: ISO_8601

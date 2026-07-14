@@ -7,7 +7,7 @@ substitutions:
   board: esp32dev
 
 packages:
-  base: !include ../common/base.yaml
+  base: !include common/base.yaml
 
 switch:
   - platform: gpio

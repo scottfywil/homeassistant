@@ -40,11 +40,11 @@ jobs:
           python-version: "3.12"
       - run: pip install esphome
       - name: Provide secrets from example
-        run: cp secrets.yaml.example esphome/devices/secrets.yaml
+        run: cp secrets.yaml.example esphome/secrets.yaml
       - name: Validate all device configs
         run: |
           set -e
-          for f in esphome/devices/*.yaml; do
+          for f in esphome/*.yaml; do
             case "$f" in *secrets*) continue;; esac
             echo "== $f"
             esphome config "$f" > /dev/null

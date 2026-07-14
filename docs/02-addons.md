@@ -7,43 +7,57 @@ All add-ons: Settings → Add-ons → Add-on Store. For each one below, enable
 
 ## 1. Mosquitto broker (MQTT)
 
-1. Install **Mosquitto broker**, start it.
-2. Create a dedicated HA user for MQTT: Settings → People → Users → Add —
-   username/password matching `mqtt_username`/`mqtt_password` in your
-   `secrets.yaml`. (Local-only user, not admin.)
-3. Settings → Devices & Services: the **MQTT** integration is discovered —
-   configure it with that user.
+1. Install **Mosquitto broker** (Official apps), enable Start-on-boot +
+   Watchdog, start it.
+2. Settings → Devices & Services: the **MQTT** integration shows up as
+   discovered — click Add/Submit. It connects through the add-on's internal
+   auth; no credentials needed.
+3. Optional (for external MQTT clients only): create a dedicated HA user
+   matching `mqtt_username`/`mqtt_password` in `secrets.yaml`
+   (Settings → People → Users; local-only, not admin, **lowercase username**
+   — HA rejects mixed case). The add-ons below do NOT need it.
 
 ## 2. Zigbee2MQTT
 
 1. Plug the MG24 dongle **on the USB extension cable**, into a rear USB-A port.
-2. Find the adapter path: Settings → System → Hardware → All Hardware → look
-   for `ttyACM0`/`ttyUSB0`. Prefer the stable `/dev/serial/by-id/...` path.
-3. Install **Zigbee2MQTT** (add repository
-   `https://github.com/zigbee2mqtt/hassio-zigbee2mqtt` if not listed).
-4. Before first start, apply the settings from this repo's
-   `zigbee2mqtt/configuration.yaml` via the add-on Configuration tab
-   (serial port, adapter `ember`, channel, MQTT credentials). The add-on
-   stores its live config in its own data directory — this repo's copy is
-   the reference; keep them in sync when you change settings.
-5. Start. Open the Z2M web UI (sidebar) and confirm the coordinator is up.
-6. Leave `permit_join` off until pairing (runbook 04).
+2. HA will auto-discover the dongle as a ZHA integration — **Ignore** that
+   discovery (Settings → Devices & Services → Discovered → Ignore); ZHA and
+   Zigbee2MQTT can't share the radio, and this build uses Z2M.
+3. App store → ⋮ → Repositories → add
+   `https://github.com/zigbee2mqtt/hassio-zigbee2mqtt`, then install
+   **Zigbee2MQTT**. Enable Start-on-boot + Watchdog + Show in sidebar.
+4. Pre-seed the data config from the SSH terminal (channel, frontend — see
+   [zigbee2mqtt-reference.yaml](zigbee2mqtt-reference.yaml)):
+   ```bash
+   mkdir -p /config/zigbee2mqtt
+   # write homeassistant/frontend/permit_join/advanced keys per the reference
+   ```
+5. In the add-on **Configuration** tab: leave `mqtt` **entirely blank**
+   (the add-on auto-authenticates to Mosquitto via Supervisor service
+   credentials — no MQTT user needed). Under `serial`, set `port` to the
+   stable path (find it: `ls -l /dev/serial/by-id/` — the MG24 shows as
+   `usb-SONOFF_SONOFF_Dongle_Plus_MG24_...-if00-port0`, enumerating as
+   ttyUSB0) and `adapter: ember`. Save.
+6. Start. The Log should show `[STACK STATUS] Network up`, coordinator
+   `EmberZNet 7.4.5`, `Connected to MQTT server`, `Zigbee2MQTT started!`.
+7. `permit_join` stays off until pairing (runbook 04).
 
 ## 3. ESPHome
 
-1. Install **ESPHome Device Builder**, start, open the dashboard.
-2. Point it at this repo's configs. The add-on's config directory is separate
-   from `/config`; symlink the repo's ESPHome tree into it from the SSH add-on:
+1. Install **ESPHome Device Builder** (Official), Start-on-boot + Watchdog +
+   sidebar, start.
+2. The add-on reads YAMLs from its own config dir, not `/config`. Symlink the
+   repo's files in from the SSH terminal — targets use `/homeassistant/...`
+   because that's the repo's path *inside the ESPHome container*:
    ```bash
-   # adjust the addon_configs slug to what exists on your box
    cd /addon_configs/5c53de3b_esphome
-   ln -s /config/esphome/common common
-   ln -s /config/esphome/devices/*.yaml .
-   cp /config/secrets.yaml secrets.yaml
+   ln -sfn /homeassistant/esphome/common common
+   for f in /config/esphome/*.yaml; do ln -sf "/homeassistant/esphome/$(basename "$f")" .; done
+   rm -f secrets.yaml && ln -s /homeassistant/secrets.yaml secrets.yaml
    ```
-   (If symlinks misbehave, copy instead and treat the repo as the master.)
-3. The four boards from `esphome/devices/` appear in the dashboard, ready to
-   build. First flash per board is over USB; after that it's OTA (runbook 05).
+   New boards added to the repo need one new `ln -sf` (or rerun the loop).
+3. The boards from `esphome/` appear in the dashboard, ready to build.
+   First flash per board is over USB; after that it's OTA (runbook 05).
 
 ## 4. Git Pull (auto-deploy)
 

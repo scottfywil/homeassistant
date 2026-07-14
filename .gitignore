@@ -1,8 +1,10 @@
 # Secrets — NEVER commit
 secrets.yaml
 esphome/secrets.yaml
-esphome/devices/secrets.yaml
-zigbee2mqtt/secret.yaml
+
+# Zigbee2MQTT add-on data dir (runtime-managed; contains the network key).
+# Reference config lives in docs/zigbee2mqtt-reference.yaml.
+zigbee2mqtt/
 
 # Home Assistant runtime state
 .storage/

@@ -42,7 +42,7 @@ straight to the coordinator.
 
 ## ESP32 board placement
 
-Clone the templates in `esphome/devices/` (see runbook 05). Suggested
+Clone the templates in `esphome/` (see runbook 05). Suggested
 build-out order:
 
 | Board | Template | Location / purpose |

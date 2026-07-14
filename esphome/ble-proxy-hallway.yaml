@@ -5,5 +5,5 @@ substitutions:
   board: esp32dev
 
 packages:
-  base: !include ../common/base.yaml
-  ble: !include ../common/ble_proxy.yaml
+  base: !include common/base.yaml
+  ble: !include common/ble_proxy.yaml
