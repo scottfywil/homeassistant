@@ -41,8 +41,34 @@ Settings → Devices & Services → Add Integration:
   portal.
 
 These are configured through the UI (they store OAuth tokens in `.storage/`,
-which is deliberately not in git). Document *which* integrations are active
-here as they're added, so a rebuild has a checklist.
+which is deliberately not in git). The live list of what's actually
+configured lives in [09-integrations-status.md](09-integrations-status.md).
+
+## NAS / server integrations
+
+- **Synology DSM**: **requires an account in the `administrators` group** —
+  a least-privilege read-only user does NOT work (the integration reads
+  system/storage/utilization APIs that return "Insufficient user privilege"
+  otherwise). In the Add dialog, match the port to the SSL setting:
+  **port 5000 with "Uses an SSL certificate" unchecked** (plain HTTP), or
+  **5001 with it checked** (HTTPS). Mismatched (5000 + SSL on) hangs silently
+  with no error. Leave "Verify SSL certificate" off for a self-signed cert.
+- **OctoPrint**: the config flow asks for your **OctoPrint username** (not an
+  API key up front). After Submit, OctoPrint shows an **"Allow access"**
+  prompt you approve in the printer's own web UI (Application Keys workflow).
+  Host is auto-filled; port is usually **80** on an OctoPi image.
+- **QNAP**: standard host + admin-ish account.
+
+## Gotchas learned in the field (HA 2026.7.x)
+
+- **HA usernames must be lowercase** — the Add User dialog silently rejects
+  mixed case.
+- **Password-manager autofill can leave a form's Submit button dead** — HA's
+  form state doesn't see autofilled values. If Submit won't activate, clear
+  the field and **type the value by hand**.
+- The **Terminal add-on iframe** blocks direct URL navigation with an
+  "unsaved changes" prompt — navigate via the HA sidebar instead.
+- HA renamed "Add-ons" to **"Apps"** and there's no Advanced Mode gate.
 
 ## After adding any device
 
