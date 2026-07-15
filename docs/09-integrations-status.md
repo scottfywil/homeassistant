@@ -135,8 +135,9 @@ Mosquitto · Zigbee2MQTT (MG24, network up, ch 20) · ESPHome Device Builder
   (H5110/H5177/H5179) — covered by their friendly-named govee2mqtt twins. Assigned 22 Govee
   devices to rooms: the **cigar/humidor cluster (13) → Rec Room**; Office Desktop/Office
   Humidor/Office TV Backlight → **Office**; bath sensors → Basement Bath / Master Bathroom /
-  Powder Room / Boys' Bathroom; Kitchen Sink + Kettle → Kitchen. **Left unassigned:** Freezer
-  (ambiguous) and HubWise Kettle (likely work-site). Devices have no icon field, so no
+  Powder Room / Boys' Bathroom; Kitchen Sink + Kettle → Kitchen; **Freezer → Utility Room**.
+  **HubWise Kettle** left unassigned — **confirmed work-site device** (like the Tuya HubWise
+  ones), not at home. Devices have no icon field, so no
   device-level "logos" — Govee brand logo + entity type-icons are automatic.
 - **Z-Wave** — ❌ **cancelled.** The only driver (Kwikset lock re-pair) is dead: the
   910/912 locks are the house locks (confirmed same as the old "892"), stay on Vivint,
@@ -179,10 +180,11 @@ shared Smart Life acct), Blink Camper (out of scope) + Blink sync-module (infra)
 HA system/add-on/service devices (hassio, sun, bluetooth, cast, mqtt, hacs meta, iBeacon
 trackers, Hue Bridge).
 
-**Govee area pass done 2026-07-15** (govee2mqtt): 22 assigned (Rec Room ×13 cigar/humidor,
-Office ×3, Kitchen ×2, + 4 bath/powder sensors); Freezer + HubWise Kettle left unassigned.
+**Govee area pass done 2026-07-15** (govee2mqtt): 23 assigned (Rec Room ×13 cigar/humidor,
+Office ×3, Kitchen ×2, Freezer → Utility Room, + 4 bath/powder sensors). **HubWise Kettle**
+left unassigned — confirmed work-site device (not at home).
 **Still placeable — needs room info:** the QHM-1134 `led_ble` controller (×1) and the HP
-LaserJet printer (×1). Plus deferred: Freezer, HubWise Kettle.
+LaserJet printer (×1).
 
 **Duplicate-scan notes (not acted on — your call):** (a) two Vivint devices share the name
 **"Front Door"** — the Kwikset *lock* + the door-open *sensor* (not a true dup; rename to
