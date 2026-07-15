@@ -171,8 +171,14 @@ trackers, Hue Bridge).
   motion-detection toggles, Z2M permit-join, Roborock config switches, **HubWise Spotlights/
   West Entrance** (work-site), **Vivint locks + alarm** (read-only), the misclassified
   "Humidifier" light. Google Assistant left at 0.
-- ⏳ **User step remaining:** activate the **Home Assistant skill in the Alexa app** (link the
-  Nabu Casa account) and run discovery — until then Alexa can't see the exposed devices.
+- ✅ **Home Assistant Alexa skill enabled + linked** to the Nabu Casa account; discovery ran,
+  all **19 devices found** in Alexa (2026-07-14).
+- ✅ **De-duplicated Alexa sources:** the same devices were also being published by vendor
+  skills (Smart Life/Tuya especially → 14 dup plugs). Disabled **all overlapping vendor
+  smart-home skills** in Alexa so each device is seen **once, via Home Assistant** (the single
+  control layer). **Exception: the Wyze skill is kept enabled** — HA-Wyze is parked on the TLS
+  issue, so Wyze devices stay controllable via Wyze's own Alexa skill until HA-Wyze is fixed.
+  (Govee's skill only exposed sensors — nothing controllable lost.)
 - Note: **Assist** (local voice) still auto-exposes (75 entities) — local only, left as-is;
   trim later if desired.
 
