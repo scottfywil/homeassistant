@@ -139,14 +139,32 @@ Still needs placement from the user (fold into the area batch):
 - **Tuya (11)**: Back Fountain, Patio, Front Outdoor Lights, Bar, STITCH Power
   Strip, Sam's Light, Hunter's Light, Humidifier, Outside House Lights, +2
   "HubWise" switches. Most are **outdoor** — no outdoor Area exists yet (create
-  one, or park in Garage). "HubWise Spotlights/West Entrance" may be **work-site**
-  devices pulled in via the shared Smart Life account — confirm before assigning.
+  one, or park in Garage).
+  - ✅ **Confirmed 2026-07-14:** "HubWise Spotlights/West Entrance" ARE **work-site**
+    devices (shared Smart Life account) — **do not assign to home Areas / skip**; excluded
+    from Alexa.
+  - ✅ **Confirmed:** Sam's Light → **Bedroom 2**, Hunter's Light → **Bedroom 3** (kids' rooms).
 - **Blink (6)**: Back Yard, Front Yard cams (outdoor); Camper cam out of scope.
-- Sam's/Hunter's Light → likely Bedroom 2 / Bedroom 3 (kids' rooms) — confirm.
+
+## Alexa (Nabu Casa) exposure — done 2026-07-14
+
+- Nabu Casa **Connected**; Alexa integration on; **auto-expose OFF** (per [03](03-nabu-casa-alexa.md)).
+  ⚠️ Nabu Casa account is a **trial expiring 2026-08-14** (swi***@coursewareexperts.com) —
+  Alexa stops working when it lapses unless subscribed.
+- **19 entities deliberately exposed to Alexa** (`cloud.alexa`): 4 lights (Dresser Lamp,
+  Dining Room Lamp, Dining, QHM-1134), Nest thermostat (Family Room), and 14 plugs (Back
+  Fountain, Patio 1–4, Front Outdoor Lights, Bar, STITCH 1–4, Sam's, Hunter's, Outside
+  House Lights).
+- **Not exposed:** all sensors (motion/camera/temp/humidity/diagnostic), camera privacy +
+  motion-detection toggles, Z2M permit-join, Roborock config switches, **HubWise Spotlights/
+  West Entrance** (work-site), **Vivint locks + alarm** (read-only), the misclassified
+  "Humidifier" light. Google Assistant left at 0.
+- ⏳ **User step remaining:** activate the **Home Assistant skill in the Alexa app** (link the
+  Nabu Casa account) and run discovery — until then Alexa can't see the exposed devices.
+- Note: **Assist** (local voice) still auto-exposes (75 entities) — local only, left as-is;
+  trim later if desired.
 
 ## Not yet started
 
-- Alexa entity-exposure pass ([03-nabu-casa-alexa.md](03-nabu-casa-alexa.md)) —
-  expose deliberately, not "all".
 - ESP32 presence sensors — parts not yet ordered ([08-presence-sensors.md](08-presence-sensors.md)).
 - Automations in `packages/` beyond the starter office-lighting example.
