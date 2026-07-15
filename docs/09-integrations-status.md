@@ -36,7 +36,7 @@ Mosquitto · Zigbee2MQTT (MG24, network up, ch 20) · ESPHome Device Builder
 | iBeacon Tracker | 4 | |
 | HP LaserJet (IPP) | 1 | printer status |
 | LG webOS TV (`webostv`) | 1 | 2025 OLED65 C5 @ 172.16.105.143 → device "Great Room TV", **Living Room** area (area renamed from Great Room 2026-07-14; TV device name left as-is). Full power/vol/app control. (Also still visible via Google Cast) |
-| QNAP (TS-653A) | 1 (+36 disabled) | NAS monitoring, admin acct, host:8080 SSL off → Mechanical area. NAS self-reports "warning" status — check QTS |
+| QNAP (TS-653A) | 1 (+36 disabled) | NAS monitoring, admin acct, host:8080 SSL off → Utility Room area. NAS self-reports "warning" status — check QTS |
 | QHM-1134 LED BLE | 1 | RGB/W controller (`led_ble`) |
 | Blink | 6 | cloud; cams Back/Front Yard, Living Room, Basement, Camper + sync module. Camper out of scope |
 | Tuya / Smart Life | 11 | cloud; user-code flow. Mostly outdoor plugs/switches (see area notes) |
@@ -135,15 +135,20 @@ Mosquitto · Zigbee2MQTT (MG24, network up, ch 20) · ESPHome Device Builder
 Assigned this batch:
 - **Tuya:** Back Fountain → Back Yard · Patio → Patio · Bar → Patio (assumed the *patio*
   bar; there's also a Rec Room bar — move if wrong) · Front Outdoor Lights + Outside House
-  Lights → Front Yard · Humidifier → Primary Bedroom · Sam's Light → Bedroom 2 · Hunter's
-  Light → Bedroom 3 · STITCH Power Strip → Office.
+  Lights → Front Yard · Humidifier → Master Bedroom · Sam's Light → Sam's Bedroom · Hunter's
+  Light → Hunter's Bedroom · STITCH Power Strip → Office.
 - **Blink:** Back Yard cam → Back Yard · Front Yard cam → Front Yard. (Living Room→Great
   Room, Basement→Rec Room were already set.)
 - **Vivint (unmapped 3):** Mudroom Door → Mudroom · Backyard Camera → Back Yard ·
   Entrance Motion Detector → Entryway.
 - Earlier: Nest thermostat → Living Room, Nest Garage cam → Garage.
-- **Area rename 2026-07-14:** "Great Room" → **"Living Room"** (0 devices orphaned; the LG
-  "Great Room TV" *device* name was intentionally left unchanged).
+- **Area renames 2026-07-14** (all applied via area registry, 0 devices orphaned):
+  Great Room → **Living Room** (LG "Great Room TV" *device* name left as-is); Primary Bedroom
+  → **Master Bedroom**; Primary Bath → **Master Bathroom**; Half Bath → **Powder Room**;
+  Hall Bath → **Boys' Bathroom**; Mechanical → **Utility Room**; Bedroom 2 → **Hunter's
+  Bedroom**; Bedroom 3 → **Sam's Bedroom**.
+  - The Bedroom 2/3 rename revealed the earlier kids'-light mapping was inverted; corrected:
+    **Sam's Light → Sam's Bedroom**, **Hunter's Light → Hunter's Bedroom**.
 
 **Deliberately left unassigned:** HubWise Spotlights + West Entrance (Tuya work-site,
 shared Smart Life acct), Blink Camper (out of scope) + Blink sync-module (infra), and all

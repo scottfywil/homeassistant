@@ -18,9 +18,9 @@ Areas power Alexa groups ("turn off the basement lights") and dashboards.
 
 | Level | Areas |
 |---|---|
-| Basement | Rec Room, Workout Room, Basement Bath, Mechanical |
-| Main | Kitchen, Dinette, Living Room, Dining Room, Half Bath, Laundry, Mudroom, Garage |
-| Upper | Primary Bedroom, Primary Bath, Bedroom 2, Bedroom 3, Office (bedroom 4), Hall Bath |
+| Basement | Rec Room, Workout Room, Basement Bath, Utility Room |
+| Main | Kitchen, Dinette, Living Room, Dining Room, Powder Room, Laundry, Mudroom, Garage |
+| Upper | Master Bedroom, Master Bathroom, Hunter's Bedroom, Sam's Bedroom, Office (bedroom 4), Boys' Bathroom |
 
 ## Radio coverage plan
 
@@ -50,12 +50,12 @@ build-out order:
 | `garage-relay` | garage-relay.yaml | **Two relay channels + two reed sensors** — double door and single door. Extend the template to a second relay/sensor pair. |
 | `ble-proxy-main` | ble-proxy-hallway.yaml | Main floor, central |
 | `ble-proxy-upper` | ble-proxy-hallway.yaml | Upstairs hall landing |
-| `mechanical-sensor` | office-sensor.yaml | Mechanical room: temp/humidity; add a water-leak sensor input (GPIO + probe) near the water heater/sump |
+| `mechanical-sensor` | office-sensor.yaml | Utility Room: temp/humidity; add a water-leak sensor input (GPIO + probe) near the water heater/sump |
 | `rec-room-sensor` | office-sensor.yaml | Basement rec room: presence/climate/lux multisensor |
 | room multisensors ×N | office-sensor.yaml | mmWave presence + climate per sit-still room — see [08-presence-sensors.md](08-presence-sensors.md) for the room plan and BOM |
 
-Bathroom humidity (shower → fan automation) targets: Primary Bath, Hall
-Bath, Basement Bath — Zigbee temp/humidity sensors (e.g. Aqara/Sonoff) are
+Bathroom humidity (shower → fan automation) targets: Master Bathroom, Boys'
+Bathroom, Basement Bath — Zigbee temp/humidity sensors (e.g. Aqara/Sonoff) are
 easier than ESP32 boards in bathrooms; wire the automation in
 `packages/climate.yaml`.
 
@@ -163,7 +163,7 @@ Once sensors exist, these go in `packages/` (each is a small PR):
 
 - Bath fans on humidity spike, off 20 min after normal (all 3 full baths)
 - Garage doors: alert if either door open >10 min after 9pm; auto-close option
-- Mechanical room: leak sensor → shut-off alert + critical notification
+- Utility Room: leak sensor → shut-off alert + critical notification
 - Workout room: motion → lights + fan; temp alert if >78°F
 - Basement rec room lights on motion when dark (clone of the office pattern)
 - "Everyone upstairs asleep" (upper motion quiet + time) → whole-house off scene

@@ -13,7 +13,7 @@ stay on for a person reading in a chair — the thing PIR can't do.
 | Living Room | DIY multisensor | Sit-still (TV) |
 | Rec Room (basement) | DIY multisensor | Sit-still (TV/games) |
 | Workout Room | DIY multisensor | Still-ish (floor work); temp alerting too |
-| Primary Bedroom | DIY multisensor | Sleep presence enables "everyone asleep" scene |
+| Master Bedroom | DIY multisensor | Sleep presence enables "everyone asleep" scene |
 | Kitchen/Dinette | DIY multisensor | Standing-still cooking; lux for under-cabinet lights |
 | Bedrooms 2–3 | Zigbee PIR (or multisensor later) | Lower stakes |
 | Hallways, Mudroom, Laundry, Garage entry | Zigbee PIR (Sonoff SNZB-03P / Aqara P1) | Transit — fast trigger matters, stillness doesn't |
