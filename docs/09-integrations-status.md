@@ -186,9 +186,10 @@ left unassigned — confirmed work-site device (not at home).
 **Still placeable — needs room info:** the QHM-1134 `led_ble` controller (×1) and the HP
 LaserJet printer (×1).
 
-**Duplicate-scan notes (not acted on — your call):** (a) two Vivint devices share the name
-**"Front Door"** — the Kwikset *lock* + the door-open *sensor* (not a true dup; rename to
-disambiguate if wanted). (b) The **LG TV** also appears via **Google Cast** (separate
+**Duplicate-scan notes:** (a) ✅ the two Vivint devices that both read "Front Door" (Kwikset
+*lock* + door-open *sensor*) were **renamed** to **"Front Door Lock"** and **"Front Door
+Sensor"** (2026-07-15; device `name_by_user` only — entity IDs unchanged). (b) The **LG TV**
+also appears via **Google Cast** (separate
 `media_player`) — kept, since Cast enables casting apps while `webostv` gives power/vol/app
 control.
 
