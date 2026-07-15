@@ -118,8 +118,9 @@ Mosquitto · Zigbee2MQTT (MG24, network up, ch 20) · ESPHome Device Builder
   910/912 locks are the house locks (confirmed same as the old "892"), stay on Vivint,
   and were never on SmartThings; garage is MyQ. **No local Z-Wave devices remain**, so the
   PZG23 dongle / Z-Wave JS is not needed unless a future local Z-Wave device appears.
-- **SmartThings hubs (×2)** — now **unblocked for retirement** (locks confirmed on Vivint,
-  not SmartThings). Inventory anything else still paired first (see [07](07-home-layout.md)).
+- **SmartThings hubs (×2)** — ✅ **retired 2026-07-14.** Confirmed empty (locks on Vivint,
+  nothing else paired); removed from the Samsung/SmartThings account + factory-reset. Never
+  integrated in HA, so no HA-side cleanup was needed.
 - **Garage doors** — controlled by **MyQ** (replaced the old Vivint Z-Wave controllers,
   now disabled). **No cloud path** — HA's MyQ integration was removed in 2023.12 and
   Chamberlain blocks 3rd-party access. Local path if HA control wanted: **ratgdo** ESPHome

@@ -84,10 +84,9 @@ Work through these during setup (runbook 04):
       (models "SmartCode 910" + "Door Lock 912"; the earlier "892" label was loose — same
       physical locks, confirmed 2026-07-14). By decision they **stay on Vivint** (tied to
       the monitored alarm). The Z-Wave-JS lock migration below is **cancelled**.
-- [ ] **SmartThings hubs (×2)** → retire. The locks were the reason to keep them and are
-      now confirmed on Vivint (not SmartThings), so the hubs are **unblocked for retirement**
-      — just inventory anything else still paired first; the SmartThings cloud integration
-      can bridge stragglers temporarily.
+- [x] **SmartThings hubs (×2)** → **retired 2026-07-14.** Confirmed empty (the locks that
+      justified keeping them are on Vivint; nothing else was paired). Removed from the
+      SmartThings/Samsung account and factory-reset. Never integrated in HA, so no HA cleanup.
 - [x] **Vivint security system + cameras** → `natekspencer/ha-vivint` via HACS (cloud),
       done 2026-07-14. Read-only posture (arming left alone). Garage controllers (old
       Vivint Z-Wave, now MyQ) and a duplicate Nest were disabled; locks/alarm/sensors kept.
