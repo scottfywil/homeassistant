@@ -1,7 +1,7 @@
 # 09 — Integrations Status (living doc)
 
 Snapshot of what's actually running on the box. Update as integrations are
-added. Last updated: **2026-07-14**.
+added. Last updated: **2026-07-15**.
 
 ## Platform state
 
@@ -32,7 +32,7 @@ Mosquitto · Zigbee2MQTT (MG24, network up, ch 20) · ESPHome Device Builder
 | Synology DSM (Nas01, .100) | 6 | admin-group account, port 5000, SSL off |
 | OctoPrint — Prusa Mini (.141) | 1 | → Workout Room |
 | OctoPrint — Prusa MK3S+ (.153) | 1 | → Workout Room |
-| Govee Bluetooth | 4 | temp/humidity sensors |
+| Govee Bluetooth (`govee_ble`) | 4 | temp/humidity sensors (local BLE). Full Govee ecosystem (lights/plugs) pending via govee2mqtt — parked, see Govee note below |
 | iBeacon Tracker | 4 | |
 | HP LaserJet (IPP) | 1 | printer status |
 | LG webOS TV (`webostv`) | 1 | 2025 OLED65 C5 @ 172.16.105.143 → device "Great Room TV", **Living Room** area (area renamed from Great Room 2026-07-14; TV device name left as-is). Full power/vol/app control. (Also still visible via Google Cast) |
@@ -97,7 +97,7 @@ Mosquitto · Zigbee2MQTT (MG24, network up, ch 20) · ESPHome Device Builder
 
 - **EISI-NAS01** (192.168.7.10, discovered) — parked; different subnet.
 - **Cloud accounts**: Tuya, Blink, Nest, Vivint ✅ done. **Ring dropped** (no Ring).
-  **Wyze ⚠️ installed but blocked** — see note below.
+  **Wyze ⚠️ installed but blocked**, **Govee (full ecosystem) ⚠️ parked** — see notes below.
 
 ### Wyze note (blocked, parked 2026-07-14)
 - Integration `SecKatie/ha-wyzeapi` (default HACS store, **v0.1.38**) installed; config
@@ -114,6 +114,26 @@ Mosquitto · Zigbee2MQTT (MG24, network up, ch 20) · ESPHome Device Builder
 - **To revisit later:** check for a newer ha-wyzeapi release / recent issues mentioning HAOS
   or Python 3.14; ground-truth the chain with `openssl s_client -showcerts api.wyzecam.com:443`
   from the **Core** container; cameras would need a separate `docker-wyze-bridge` regardless.
+
+### Govee (full ecosystem) note (parked 2026-07-15)
+- Goal: bring the whole Govee account (lights/strips/plugs) into HA, beyond the 4 local
+  `govee_ble` temp/humidity sensors already integrated.
+- Chose **govee2mqtt** (`wez/govee2mqtt`, add-on repo added; add-on **v2026.03.25** installed).
+  Config: Govee account **email/password** (scottyfwil@gmail.com), temp scale **F**, MQTT
+  **auto** (core-mosquitto — connected fine). **API key left blank** — user applied but Govee
+  hasn't issued it yet.
+- **Setup fails:** account-login (undocumented API) returns **status 454** from
+  `app2.govee.com/.../v1/login` → govee2mqtt refuses to start. This is a **Govee backend change**
+  (app-version/signature enforcement) breaking the email/password path for *all* users
+  ([#682](https://github.com/wez/govee2mqtt/issues/682), related [#626](https://github.com/wez/govee2mqtt/issues/626)/[#622](https://github.com/wez/govee2mqtt/issues/622)). **Not our creds or network.**
+- **Parked:** add-on installed + configured, **Stopped, Start-on-boot OFF** (so it won't error
+  every boot). Credentials preserved.
+- **When the Govee API key arrives:** add it in the add-on config and Start — the official
+  **platform API is a different endpoint, not affected by the 454 break**, so it should work.
+  Then re-enable start-on-boot. That's the intended unblock.
+- Fallbacks if needed: **LAN-only** (clear account creds → runs LAN mode; enable "LAN Control"
+  per supported device in the Govee app; lights only, no plugs/sensors/scenes), or wait for a
+  govee2mqtt update that adapts to Govee's backend change.
 - **Z-Wave** — ❌ **cancelled.** The only driver (Kwikset lock re-pair) is dead: the
   910/912 locks are the house locks (confirmed same as the old "892"), stay on Vivint,
   and were never on SmartThings; garage is MyQ. **No local Z-Wave devices remain**, so the
