@@ -183,8 +183,11 @@ trackers, Hue Bridge).
 **Govee area pass done 2026-07-15** (govee2mqtt): 23 assigned (Rec Room ×13 cigar/humidor,
 Office ×3, Kitchen ×2, Freezer → Utility Room, + 4 bath/powder sensors). **HubWise Kettle**
 left unassigned — confirmed work-site device (not at home).
-**Still placeable — needs room info:** just the HP LaserJet printer (×1). (QHM-1134 `led_ble`
-→ **Rec Room** on 2026-07-15 — it's the Rec Room TV backlight.)
+**Device → Area placement COMPLETE (2026-07-15):** HP LaserJet → **Office**; QHM-1134 `led_ble`
+→ **Rec Room** (TV backlight). All placeable devices are now assigned. Remaining unassigned are
+intentional exclusions only: HubWise work-site devices (Tuya ×2 + Govee kettle), Blink Camper +
+sync-module, and HA infra/service devices (hassio, sun, bluetooth, cast, mqtt, hacs meta,
+iBeacon trackers, Hue Bridge, Govee2MQTT bridge).
 
 **Duplicate-scan notes:** (a) ✅ the two Vivint devices that both read "Front Door" (Kwikset
 *lock* + door-open *sensor*) were **renamed** to **"Front Door Lock"** and **"Front Door
