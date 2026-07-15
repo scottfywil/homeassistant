@@ -19,7 +19,7 @@ Areas power Alexa groups ("turn off the basement lights") and dashboards.
 | Level | Areas |
 |---|---|
 | Basement | Rec Room, Workout Room, Basement Bath, Mechanical |
-| Main | Kitchen, Dinette, Great Room, Dining Room, Half Bath, Laundry, Mudroom, Garage |
+| Main | Kitchen, Dinette, Living Room, Dining Room, Half Bath, Laundry, Mudroom, Garage |
 | Upper | Primary Bedroom, Primary Bath, Bedroom 2, Bedroom 3, Office (bedroom 4), Hall Bath |
 
 ## Radio coverage plan
@@ -32,7 +32,7 @@ not battery-powered). Add routers before battery devices.
 | Level | Zigbee router (min) | ESP32 BLE proxy |
 |---|---|---|
 | Basement | coordinator + 1 plug (Rec Room) | covered by proxies above via floor, add if BLE devices live here |
-| Main | 1–2 plugs/switches (Kitchen + Great Room) | 1 (central — Great Room or hallway) |
+| Main | 1–2 plugs/switches (Kitchen + Living Room) | 1 (central — Living Room or hallway) |
 | Upper | 1 plug/switch (hallway or Primary) | 1 (hall landing) |
 | Garage | 1 (the garage-relay board is WiFi, so add a Zigbee plug if pairing Zigbee there) | — |
 
@@ -122,7 +122,7 @@ voice control must work well (assign matching Alexa groups):
 | Echo Dot | Garage |
 | Echo Show 8 | Kitchen |
 | Echo Show 5 | Office (bedroom 4, upstairs) |
-| Echo 4th gen ("Red") | Great Room (main-level living room) |
+| Echo 4th gen ("Red") | Living Room (main level) |
 | Echo Dot | Patio |
 | Echo Dot 3rd gen | Outside bar |
 

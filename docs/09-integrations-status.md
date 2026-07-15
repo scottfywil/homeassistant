@@ -35,12 +35,12 @@ Mosquitto · Zigbee2MQTT (MG24, network up, ch 20) · ESPHome Device Builder
 | Govee Bluetooth | 4 | temp/humidity sensors |
 | iBeacon Tracker | 4 | |
 | HP LaserJet (IPP) | 1 | printer status |
-| LG webOS TV (`webostv`) | 1 | 2025 OLED65 C5 @ 172.16.105.143 → "Great Room TV", Great Room area. Full power/vol/app control. (Also still visible via Google Cast) |
+| LG webOS TV (`webostv`) | 1 | 2025 OLED65 C5 @ 172.16.105.143 → device "Great Room TV", **Living Room** area (area renamed from Great Room 2026-07-14; TV device name left as-is). Full power/vol/app control. (Also still visible via Google Cast) |
 | QNAP (TS-653A) | 1 (+36 disabled) | NAS monitoring, admin acct, host:8080 SSL off → Mechanical area. NAS self-reports "warning" status — check QTS |
 | QHM-1134 LED BLE | 1 | RGB/W controller (`led_ble`) |
 | Blink | 6 | cloud; cams Back/Front Yard, Living Room, Basement, Camper + sync module. Camper out of scope |
 | Tuya / Smart Life | 11 | cloud; user-code flow. Mostly outdoor plugs/switches (see area notes) |
-| Google Nest | 2 (6 entities) | Family Room thermostat → Great Room; Garage camera → Garage. SDM + Pub/Sub events enabled. See setup notes below |
+| Google Nest | 2 (6 entities) | Family Room thermostat → Living Room; Garage camera → Garage. SDM + Pub/Sub events enabled. See setup notes below |
 | Vivint (HACS: `natekspencer/ha-vivint`) | 13 active (of 17; 4 disabled) | cloud; user/pass + MFA. **Read-only posture** (pro-monitored). Alarm panel, 2 Kwikset locks, door/window + glass-break + motion sensors, cameras. Garage (×3) + duplicate Nest disabled — see Vivint notes below. Vivint pre-mapped some to Areas |
 | MQTT / Zigbee2MQTT Bridge | — | infra |
 
@@ -140,7 +140,9 @@ Assigned this batch:
   Room, Basement→Rec Room were already set.)
 - **Vivint (unmapped 3):** Mudroom Door → Mudroom · Backyard Camera → Back Yard ·
   Entrance Motion Detector → Entryway.
-- Earlier: Nest thermostat → Great Room, Nest Garage cam → Garage.
+- Earlier: Nest thermostat → Living Room, Nest Garage cam → Garage.
+- **Area rename 2026-07-14:** "Great Room" → **"Living Room"** (0 devices orphaned; the LG
+  "Great Room TV" *device* name was intentionally left unchanged).
 
 **Deliberately left unassigned:** HubWise Spotlights + West Entrance (Tuya work-site,
 shared Smart Life acct), Blink Camper (out of scope) + Blink sync-module (infra), and all

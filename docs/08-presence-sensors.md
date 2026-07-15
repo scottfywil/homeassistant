@@ -10,7 +10,7 @@ stay on for a person reading in a chair — the thing PIR can't do.
 | Room | Sensor | Why |
 |---|---|---|
 | Office | DIY multisensor | Sit-still room; also drives office lighting automation |
-| Great Room | DIY multisensor | Sit-still (TV) |
+| Living Room | DIY multisensor | Sit-still (TV) |
 | Rec Room (basement) | DIY multisensor | Sit-still (TV/games) |
 | Workout Room | DIY multisensor | Still-ish (floor work); temp alerting too |
 | Primary Bedroom | DIY multisensor | Sleep presence enables "everyone asleep" scene |
