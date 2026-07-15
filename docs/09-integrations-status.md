@@ -128,23 +128,27 @@ Mosquitto · Zigbee2MQTT (MG24, network up, ch 20) · ESPHome Device Builder
 
 ## Device → Area assignment
 
-Printers assigned to Workout Room. **Most other devices are not yet assigned
-to Areas** — needs room-by-room placement info from the user. Assign in bulk
-via the device registry once placements are known.
+**Tuya + Blink batch done 2026-07-14.** Created two new outdoor Areas **Back Yard** +
+**Patio** (Front Yard already existed, from Vivint). Areas now total 24.
 
-Assigned so far: Nest thermostat → Great Room, Nest Garage cam → Garage. Blink
-auto-picked a few (Living Room→Great Room, Basement→Rec Room).
+Assigned this batch:
+- **Tuya:** Back Fountain → Back Yard · Patio → Patio · Bar → Patio (assumed the *patio*
+  bar; there's also a Rec Room bar — move if wrong) · Front Outdoor Lights + Outside House
+  Lights → Front Yard · Humidifier → Primary Bedroom · Sam's Light → Bedroom 2 · Hunter's
+  Light → Bedroom 3 · STITCH Power Strip → Office.
+- **Blink:** Back Yard cam → Back Yard · Front Yard cam → Front Yard. (Living Room→Great
+  Room, Basement→Rec Room were already set.)
+- **Vivint (unmapped 3):** Mudroom Door → Mudroom · Backyard Camera → Back Yard ·
+  Entrance Motion Detector → Entryway.
+- Earlier: Nest thermostat → Great Room, Nest Garage cam → Garage.
 
-Still needs placement from the user (fold into the area batch):
-- **Tuya (11)**: Back Fountain, Patio, Front Outdoor Lights, Bar, STITCH Power
-  Strip, Sam's Light, Hunter's Light, Humidifier, Outside House Lights, +2
-  "HubWise" switches. Most are **outdoor** — no outdoor Area exists yet (create
-  one, or park in Garage).
-  - ✅ **Confirmed 2026-07-14:** "HubWise Spotlights/West Entrance" ARE **work-site**
-    devices (shared Smart Life account) — **do not assign to home Areas / skip**; excluded
-    from Alexa.
-  - ✅ **Confirmed:** Sam's Light → **Bedroom 2**, Hunter's Light → **Bedroom 3** (kids' rooms).
-- **Blink (6)**: Back Yard, Front Yard cams (outdoor); Camper cam out of scope.
+**Deliberately left unassigned:** HubWise Spotlights + West Entrance (Tuya work-site,
+shared Smart Life acct), Blink Camper (out of scope) + Blink sync-module (infra), and all
+HA system/add-on/service devices (hassio, sun, bluetooth, cast, mqtt, hacs meta, iBeacon
+trackers, Hue Bridge).
+
+**Still placeable — needs room info from user:** Govee temp/humidity sensors (×4, cryptic
+`H51xx` names), the QHM-1134 `led_ble` controller (×1), and the HP LaserJet printer (×1).
 
 ## Alexa (Nabu Casa) exposure — done 2026-07-14
 
