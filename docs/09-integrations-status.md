@@ -183,13 +183,13 @@ trackers, Hue Bridge).
 **Govee area pass done 2026-07-15** (govee2mqtt): 23 assigned (Rec Room ×13 cigar/humidor,
 Office ×3, Kitchen ×2, Freezer → Utility Room, + 4 bath/powder sensors). **HubWise Kettle**
 left unassigned — confirmed work-site device (not at home).
-**Still placeable — needs room info:** the QHM-1134 `led_ble` controller (×1) and the HP
-LaserJet printer (×1).
+**Still placeable — needs room info:** just the HP LaserJet printer (×1). (QHM-1134 `led_ble`
+→ **Rec Room** on 2026-07-15 — it's the Rec Room TV backlight.)
 
 **Duplicate-scan notes:** (a) ✅ the two Vivint devices that both read "Front Door" (Kwikset
 *lock* + door-open *sensor*) were **renamed** to **"Front Door Lock"** and **"Front Door
-Sensor"** (2026-07-15; device `name_by_user` only — entity IDs unchanged). (b) The **LG TV**
-also appears via **Google Cast** (separate
+Sensor"** (2026-07-15; device `name_by_user` only — entity IDs unchanged). (b) ✅ **kept** (user
+decision 2026-07-15) — the **LG TV** also appears via **Google Cast** (separate
 `media_player`) — kept, since Cast enables casting apps while `webostv` gives power/vol/app
 control.
 
