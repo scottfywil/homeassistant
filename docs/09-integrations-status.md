@@ -131,9 +131,13 @@ Mosquitto · Zigbee2MQTT (MG24, network up, ch 20) · ESPHome Device Builder
 - **Trade-off of API-key-only:** no IoT real-time push (status is polled) and no Tap-to-Run
   scenes. **To regain those:** re-add Govee email/password in the add-on config **once
   govee2mqtt ships a fix** for the 454 (watch for an add-on update; Auto-update is OFF).
-- ⚠️ **Likely duplicates:** the 4 `govee_ble` sensors (H5110/H5177/H5179) may now also appear
-  via govee2mqtt (friendly names). Dedupe later — keep one source per physical sensor
-  (govee_ble = local/no-cloud, cryptic names; govee2mqtt = friendly names, cloud-polled).
+- ✅ **Deduped + placed (2026-07-15):** disabled the **4 local `govee_ble` devices**
+  (H5110/H5177/H5179) — covered by their friendly-named govee2mqtt twins. Assigned 22 Govee
+  devices to rooms: the **cigar/humidor cluster (13) → Rec Room**; Office Desktop/Office
+  Humidor/Office TV Backlight → **Office**; bath sensors → Basement Bath / Master Bathroom /
+  Powder Room / Boys' Bathroom; Kitchen Sink + Kettle → Kitchen. **Left unassigned:** Freezer
+  (ambiguous) and HubWise Kettle (likely work-site). Devices have no icon field, so no
+  device-level "logos" — Govee brand logo + entity type-icons are automatic.
 - **Z-Wave** — ❌ **cancelled.** The only driver (Kwikset lock re-pair) is dead: the
   910/912 locks are the house locks (confirmed same as the old "892"), stay on Vivint,
   and were never on SmartThings; garage is MyQ. **No local Z-Wave devices remain**, so the
@@ -175,8 +179,16 @@ shared Smart Life acct), Blink Camper (out of scope) + Blink sync-module (infra)
 HA system/add-on/service devices (hassio, sun, bluetooth, cast, mqtt, hacs meta, iBeacon
 trackers, Hue Bridge).
 
-**Still placeable — needs room info from user:** Govee temp/humidity sensors (×4, cryptic
-`H51xx` names), the QHM-1134 `led_ble` controller (×1), and the HP LaserJet printer (×1).
+**Govee area pass done 2026-07-15** (govee2mqtt): 22 assigned (Rec Room ×13 cigar/humidor,
+Office ×3, Kitchen ×2, + 4 bath/powder sensors); Freezer + HubWise Kettle left unassigned.
+**Still placeable — needs room info:** the QHM-1134 `led_ble` controller (×1) and the HP
+LaserJet printer (×1). Plus deferred: Freezer, HubWise Kettle.
+
+**Duplicate-scan notes (not acted on — your call):** (a) two Vivint devices share the name
+**"Front Door"** — the Kwikset *lock* + the door-open *sensor* (not a true dup; rename to
+disambiguate if wanted). (b) The **LG TV** also appears via **Google Cast** (separate
+`media_player`) — kept, since Cast enables casting apps while `webostv` gives power/vol/app
+control.
 
 ## Alexa (Nabu Casa) exposure — done 2026-07-14
 
