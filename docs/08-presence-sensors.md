@@ -19,6 +19,13 @@ stay on for a person reading in a chair — the thing PIR can't do.
 | Hallways, Mudroom, Laundry, Garage entry | Zigbee PIR (Sonoff SNZB-03P / Aqara P1) | Transit — fast trigger matters, stillness doesn't |
 | Bathrooms ×3 | Zigbee temp/humidity (e.g. Sonoff SNZB-02D) | Humidity spike = shower → fan automation |
 
+**Deployed 2026-07-16** (first Zigbee devices on the network): SNZB-03P motion →
+**Entryway, Upstairs Hallway, Utility Room** (+1 pending → Toy Room; garage skipped —
+the Nest cam's `event.garage_garage_motion` covers it). SNZB-02D temp/humidity →
+**Master Bathroom, Boys' Bathroom, Basement Bath** (+1 spare; Workout Room is the
+candidate). Bonus triggers available from Vivint: door contacts (fast, push) and the
+Entryway PIR (has a multi-minute security-PIR cooldown — first-motion only).
+
 ## BOM — DIY multisensor (per unit)
 
 | Part | Spec / notes | ~AliExpress | ~Amazon |

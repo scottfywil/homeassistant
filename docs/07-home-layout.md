@@ -19,8 +19,10 @@ Areas power Alexa groups ("turn off the basement lights") and dashboards.
 | Level | Areas |
 |---|---|
 | Basement | Rec Room, Workout Room, Basement Bath, Utility Room |
-| Main | Kitchen, Dinette, Living Room, Dining Room, Powder Room, Laundry, Mudroom, Garage |
-| Upper | Master Bedroom, Master Bathroom, Hunter's Bedroom, Sam's Bedroom, Office (bedroom 4), Boys' Bathroom |
+| Main | Kitchen, Dinette, Living Room, Dining Room, Powder Room, Laundry, Mudroom, Garage, Toy Room |
+| Upper | Master Bedroom, Master Bathroom, Hunter's Bedroom, Sam's Bedroom, Office (bedroom 4), Boys' Bathroom, Upstairs Hallway |
+
+(Toy Room + Upstairs Hallway added 2026-07-16 for the SNZB-03P motion sensors.)
 
 ## Radio coverage plan
 

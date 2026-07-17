@@ -1,7 +1,7 @@
 # 09 — Integrations Status (living doc)
 
 Snapshot of what's actually running on the box. Update as integrations are
-added. Last updated: **2026-07-15**.
+added. Last updated: **2026-07-16**.
 
 ## Platform state
 
@@ -20,8 +20,36 @@ added. Last updated: **2026-07-15**.
 
 ## Add-ons running
 
-Mosquitto · Zigbee2MQTT (MG24, network up, ch 20) · ESPHome Device Builder
-(reads `/config/esphome` via symlinks) · Git pull · Tailscale · Terminal & SSH.
+Mosquitto · Zigbee2MQTT (MG24, network up, ch 20) · **Z-Wave JS** (PZG23, added
+2026-07-16) · govee2mqtt · ESPHome Device Builder (reads `/config/esphome` via
+symlinks) · Git pull · Tailscale · Terminal & SSH.
+
+## Zigbee devices (Z2M) — first devices live 2026-07-16
+
+- **SONOFF sensors** (user-paired, named by room): Entryway, Upstairs Hallway,
+  Utility Room (SNZB-03P motion ×3) · Master Bathroom, Boys Bathroom, Basement
+  Bathroom (SNZB-02D temp/humidity ×3). Still boxed: 1× SNZB-03P (→ Toy Room),
+  1× SNZB-02D (spare / Workout Room candidate).
+- **Sylvania/Osram bulbs ×2** migrated off the Echo Zigbee hub (models 74283
+  "Dresser Lamp" + 73693) — first Zigbee **routers** on the mesh. ⚠️ "Dresser
+  Lamp" name may collide with the existing Hue "Dresser Lamp" — resolve.
+- ⚠️ **Master Bathroom temp: LQI 4** (very weak) — re-pair it once a router
+  bulb/plug lives nearby; battery end-devices don't re-route on their own.
+- **Amazon→Z2M bulb migration in progress, user-driven** (deletes from Alexa,
+  reset dances, joins, renames, room moves done manually in the Z2M UI).
+  Reset recipes: Osram/Sylvania = 5× power-cycle ~5s/5s, blink confirms;
+  Sengled = 5× ~1s/1s (pair-only — they don't route); Hue = delete from Alexa
+  then power-cycle (Touchlink from Z2M if stubborn). Sequence: routers (bulbs)
+  first, then re-pair weak battery sensors near them.
+- **Enbrighten plugs are Wi-Fi, NOT Zigbee** (model **WFD4103E**, Tuya-based
+  BK7231T inside). They can't join Z2M / don't help the mesh. Option: pair into
+  the **Smart Life app** → lands in HA via the existing Tuya integration
+  (cloud); else leave Alexa-native. OpenBeken flash = future local option.
+- Amazon-only Wi-Fi (Echo Glows, Amazon Basics/Amazon plugs) stays in Alexa.
+- **Post-migration TODO:** deliberate Alexa exposure pass for the new HA
+  entities; rebuild Alexa groups/routines that referenced the old copies; purge
+  ~30 stale/unresponsive orphan entries in the Alexa app (leftovers of the
+  disabled vendor skills).
 
 ## Integrations configured ✅
 
@@ -139,10 +167,11 @@ Mosquitto · Zigbee2MQTT (MG24, network up, ch 20) · ESPHome Device Builder
   **HubWise Kettle** left unassigned — **confirmed work-site device** (like the Tuya HubWise
   ones), not at home. Devices have no icon field, so no
   device-level "logos" — Govee brand logo + entity type-icons are automatic.
-- **Z-Wave** — ❌ **cancelled.** The only driver (Kwikset lock re-pair) is dead: the
-  910/912 locks are the house locks (confirmed same as the old "892"), stay on Vivint,
-  and were never on SmartThings; garage is MyQ. **No local Z-Wave devices remain**, so the
-  PZG23 dongle / Z-Wave JS is not needed unless a future local Z-Wave device appears.
+- **Z-Wave** — ✅ **revived + live 2026-07-16.** (Earlier cancelled when the lock re-pair
+  died: 910/912 locks stay on Vivint, garage is MyQ.) User plugged in the **PZG23** anyway;
+  HA auto-discovered it → "Recommended installation" → **Z-Wave JS add-on installed,
+  integration loaded**. Network up, **0 devices** so far — pairing candidates TBD (possibly
+  Enbrighten Z-Wave in-wall switches). Inclusion is short-range: pair near the box.
 - **SmartThings hubs (×2)** — ✅ **retired 2026-07-14.** Confirmed empty (locks on Vivint,
   nothing else paired); removed from the Samsung/SmartThings account + factory-reset. Never
   integrated in HA, so no HA-side cleanup was needed.
