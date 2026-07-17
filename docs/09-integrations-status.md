@@ -30,11 +30,18 @@ symlinks) · Git pull · Tailscale · Terminal & SSH.
   Utility Room (SNZB-03P motion ×3) · Master Bathroom, Boys Bathroom, Basement
   Bathroom (SNZB-02D temp/humidity ×3). Still boxed: 1× SNZB-03P (→ Toy Room),
   1× SNZB-02D (spare / Workout Room candidate).
-- **Sylvania/Osram bulbs ×2** migrated off the Echo Zigbee hub (models 74283
-  "Dresser Lamp" + 73693) — first Zigbee **routers** on the mesh. ⚠️ "Dresser
-  Lamp" name may collide with the existing Hue "Dresser Lamp" — resolve.
-- ⚠️ **Master Bathroom temp: LQI 4** (very weak) — re-pair it once a router
-  bulb/plug lives nearby; battery end-devices don't re-route on their own.
+- **Sylvania/Osram bulbs ×2** migrated off the Echo Zigbee hub: "Dresser Lamp"
+  (74283) + "Utility Room Lamp" (73693) — both routing. ⚠️ "Dresser Lamp" name
+  may collide with the existing Hue "Dresser Lamp" — resolve.
+- **Repeater plugs ×4 deployed 2026-07-16** (Smart Plug Gen3): **Christmas Tree**
+  (Living Room, main-floor central), **Entryway Window** (upper foyer),
+  **Master Bedroom Repeater** (upper far end), **Mudroom Repeater** (main far
+  end). Backbone links all 255-grade. 12 devices total: 6 routers / 6 end devices.
+- ✅ **Master Bathroom temp re-paired** after the routers went in: **LQI 4 → 196**
+  (parented via Christmas Tree). Lesson: battery end-devices keep their original
+  route — re-pair them (hold reset ~5s; same IEEE = name/entities preserved)
+  after adding routers. Optional next candidates: Upstairs Hallway (49),
+  Entryway (54), Boys Bathroom (68).
 - **Amazon→Z2M bulb migration in progress, user-driven** (deletes from Alexa,
   reset dances, joins, renames, room moves done manually in the Z2M UI).
   Reset recipes: Osram/Sylvania = 5× power-cycle ~5s/5s, blink confirms;
