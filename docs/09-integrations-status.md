@@ -256,6 +256,50 @@ control.
 - Note: **Assist** (local voice) still auto-exposes (75 entities) — local only, left as-is;
   trim later if desired.
 
+## Cabinet alerting — IN PROGRESS, on hold for Twilio (2026-07-16)
+
+**Goal:** notify Scott + wife whenever the liquor/bar cabinets open. Channels: **email
+(SMTP2GO, ready)** + **SMS (Twilio)**. Companion-app push was declined by user.
+
+**Contact sensors — SONOFF SNZB-04P Gen2 (4-pack), user pairing manually in Z2M:**
+- Kitchen liquor cabinet = **1 door** → sensor "**Liquor Cabinet**" (Kitchen). *(Was mounted;
+  confirm it actually joined Z2M — a contact entity hadn't appeared yet at last check.)*
+- Rec Room bar cabinet = **2 doors** → "**Bar Cabinet Left**" + "**Bar Cabinet Right**"
+  (Rec Room). Pairing "tonight" (2026-07-16).
+- 1 sensor left over (spare).
+
+**Twilio state:**
+- Account created (signed up as HubWise), **upgraded to pay-as-you-go** ($20 balance).
+- **Toll-free number purchased: (877) 600-5343** ($2.15/mo).
+- Compliance profile was **Individual** → toll-free verification rejected it ("Invalid
+  Customer profile" — TFV doesn't accept Individual PCPs). **Converting to a HubWise
+  *Business* profile** (Persona biometric ID + EIN); user completing. TFV retried after.
+- Account SID + auth token are **not recorded here** (they live only in `secrets.yaml` on
+  the box when set — find the SID on the Twilio Console home page).
+
+**Drafted toll-free verification answers (paste when TFV form is reachable):**
+- Use case category: **Security Alert** (fallback: Notifications). Volume ~50/mo.
+- Use case: private home-automation alerts from the owner's Home Assistant to the 2
+  household members; triggered by their own door/cabinet/tamper sensors; no marketing,
+  no third-party/purchased recipients, no public sign-up.
+- Opt-in: **Verbal** — the 2 recipients (owner + spouse) consented directly; numbers
+  entered manually into the system config; reply STOP to opt out, HELP for help.
+- Sample msg: `Home Alert: Liquor Cabinet opened — Jul 16, 9:42 PM. Reply STOP to opt out.`
+
+**Planned package (DO NOT build until Twilio TFV is approved — per user):**
+`packages/cabinet_alerts.yaml`: binary-sensor *group* per cabinet (either door = open) →
+notify **email + SMS** on open; separate **tamper** alerts. Keep message text matching the
+registered sample. Notifiers: SMTP2GO SMTP + Twilio (`notify.twilio`).
+**Secrets prerequisite** (user types into `/config/secrets.yaml` BEFORE the package is
+pushed, or CI/config-check fails on missing `!secret`): `smtp2go_username`,
+`smtp2go_password`, `alert_sender`, `alert_email_scott`, `alert_email_wife`,
+`twilio_account_sid`, `twilio_auth_token`, `twilio_from_number` (+18776005343),
+`alert_sms_scott`, `alert_sms_wife`.
+
+**Resume checklist:** (1) HubWise business profile Approved → (2) toll-free verification
+submitted + approved → (3) confirm all 3–4 cabinet sensors paired/named/area-assigned →
+(4) fill secrets.yaml → (5) I push `cabinet_alerts.yaml` → (6) test with a real cabinet open.
+
 ## Not yet started
 
 - ESP32 presence sensors — parts not yet ordered ([08-presence-sensors.md](08-presence-sensors.md)).
