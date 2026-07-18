@@ -256,7 +256,7 @@ control.
 - Note: **Assist** (local voice) still auto-exposes (75 entities) — local only, left as-is;
   trim later if desired.
 
-## Cabinet alerting — IN PROGRESS, blocked on policy-page DNS (updated 2026-07-18)
+## Cabinet alerting — TFV SUBMITTED, awaiting Twilio approval (updated 2026-07-18)
 
 **Goal:** notify Scott + wife whenever the liquor/bar cabinets open, AND double the toll-free
 number as a **HubWise customer-care/outage-notification tool**. Channels: **email
@@ -275,6 +275,17 @@ statement, no unfilled placeholders (entity "HubWise Technology, Inc.", support
 (402) 339-7441 + hwadmin@hubwisetech.com, governing law Nebraska, effective 2026-07-18).
 **TFV is now UNBLOCKED — next step is pasting the pack below into the senders-onboarding
 form and submitting.**
+
+✅ **TFV SUBMITTED 2026-07-18** (user completed the senders-onboarding form manually, using
+the pack below). Extra "additional details" page answers, for the record: opt-in keywords +
+opt-in message left blank (paper-form/MSA opt-in, not keyword opt-in; defaults START/YES/
+UNSTOP apply); help message = "HubWise Technology: This number sends service and operational
+alerts to HubWise clients and staff. For assistance, reply HELP, email
+hwadmin@hubwisetech.com, or call (402) 339-7441. Msg & data rates may apply. Reply STOP to
+opt out."; age-gated = No; additional info = consent-via-MSA summary + policy URL.
+**Approval typically takes days. While waiting:** pair/verify the 3 cabinet sensors in Z2M
+and put the real secrets into `/config/secrets.yaml` on the box — both are
+approval-independent.
 
 **Also this session (2026-07-18):** TFV answers finalized (pack below, ready to paste);
 `packages/cabinet_alerts.yaml` pre-staged on branch `claude/homeassistant-twilio-sms-c2pztc`
@@ -338,10 +349,12 @@ still needs the REAL values in `/config/secrets.yaml` before merge: `smtp2go_use
 `alert_sms_scott`, `alert_sms_wife`.
 
 **Resume checklist:** (1) HubWise business profile Approved ✅ → (2) SMS policy page live +
-publicly verified ✅ → (3) finish + submit toll-free verification (pack above; Prompt B below) →
-(4) TFV approved → (5) confirm cabinet sensors paired/named/area-assigned in Z2M + verify
-entity IDs → (6) fill real secrets into `/config/secrets.yaml` on the box → (7) merge the
-`cabinet_alerts.yaml` draft PR to main → (8) test with a real cabinet open.
+publicly verified ✅ → (3) toll-free verification submitted ✅ 2026-07-18 → (4) **TFV approved
+⏳ (in review — check Twilio Console → Phone Numbers → Regulatory Compliance → Toll-Free
+Verification)** → (5) confirm cabinet sensors paired/named/area-assigned in Z2M + verify
+entity IDs (approval-independent, do now) → (6) fill real secrets into `/config/secrets.yaml`
+on the box (approval-independent, do now) → (7) merge the `cabinet_alerts.yaml` draft PR
+(#1) to main → (8) test with a real cabinet open.
 
 ### Handoff Prompt A — build the SMS policy page (run in a fresh session first)
 
