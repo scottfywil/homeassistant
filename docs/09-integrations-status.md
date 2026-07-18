@@ -256,10 +256,19 @@ control.
 - Note: **Assist** (local voice) still auto-exposes (75 entities) — local only, left as-is;
   trim later if desired.
 
-## Cabinet alerting — IN PROGRESS, on hold for Twilio (2026-07-16)
+## Cabinet alerting — IN PROGRESS, on hold for SMS policy page (updated 2026-07-17)
 
-**Goal:** notify Scott + wife whenever the liquor/bar cabinets open. Channels: **email
+**Goal:** notify Scott + wife whenever the liquor/bar cabinets open, AND double the toll-free
+number as a **HubWise customer-care/outage-notification tool**. Channels: **email
 (SMTP2GO, ready)** + **SMS (Twilio)**. Companion-app push was declined by user.
+
+**Latest status (2026-07-17):** HubWise **Business** compliance profile is **Approved** (the
+earlier Individual profile was rejected by TFV). Toll-free registration is mid-form; use case
+broadened to HubWise MSP service/outage notifications (Customer Care), consent via signed MSA
+(opt-in type = Paper form). **Blocked on:** building an SMS policy page (T&C + Privacy +
+Opt-In) to host at **https://SMSPolicy.hubwisetech.net** — Twilio needs that URL for the
+opt-in-documentation / T&C / privacy fields. Two handoff prompts for this are recorded at the
+end of this section.
 
 **Contact sensors — SONOFF SNZB-04P Gen2 (4-pack), user pairing manually in Z2M:**
 - Kitchen liquor cabinet = **1 door** → sensor "**Liquor Cabinet**" (Kitchen). *(Was mounted;
@@ -296,9 +305,102 @@ pushed, or CI/config-check fails on missing `!secret`): `smtp2go_username`,
 `twilio_account_sid`, `twilio_auth_token`, `twilio_from_number` (+18776005343),
 `alert_sms_scott`, `alert_sms_wife`.
 
-**Resume checklist:** (1) HubWise business profile Approved → (2) toll-free verification
-submitted + approved → (3) confirm all 3–4 cabinet sensors paired/named/area-assigned →
-(4) fill secrets.yaml → (5) I push `cabinet_alerts.yaml` → (6) test with a real cabinet open.
+**Resume checklist:** (1) HubWise business profile Approved ✅ → (2) build+host SMS policy
+page at SMSPolicy.hubwisetech.net (Prompt A below) → (3) finish + submit toll-free
+verification (Prompt B below) → (4) TFV approved → (5) confirm cabinet sensors
+paired/named/area-assigned → (6) fill secrets.yaml → (7) push `cabinet_alerts.yaml` → (8)
+test with a real cabinet open.
+
+### Handoff Prompt A — build the SMS policy page (run in a fresh session first)
+
+```
+Build a single, self-contained, hostable web page for HubWise Technology (a managed IT
+services provider / MSP) that will live at https://SMSPolicy.hubwisetech.net and satisfy
+Twilio Toll-Free Verification + CTIA/carrier SMS-compliance requirements.
+
+PURPOSE: We're registering a Twilio toll-free number (877) 600-5343 to send SMS to HubWise
+clients and staff. Twilio's verification reviewer will open this URL and needs to see, in
+plain language, our SMS program terms, consent/opt-in details, and privacy handling. The
+same URL will be used for three Twilio fields: opt-in documentation, Terms & Conditions,
+and Privacy Policy.
+
+ONE PAGE, THREE CLEARLY-LABELED SECTIONS:
+1. SMS Terms & Conditions
+2. Privacy Policy
+3. SMS Opt-In / Consent Policy
+
+CONTENT REQUIREMENTS (a reviewer specifically looks for all of these):
+- Program description: HubWise sends SERVICE & OPERATIONAL notifications — primarily
+  out-of-band incident/outage alerts (e.g., texting client contacts when their email/systems
+  are down), plus ticket and service updates and internal operational alerts. TRANSACTIONAL
+  ONLY — explicitly no marketing/promotional content.
+- How consent is obtained: clients consent via their signed Managed Services Agreement (MSA),
+  which authorizes HubWise to send service SMS to client-provided mobile contact numbers.
+  Numbers come only from signed client records — no purchased lists, no public sign-up.
+- Message frequency: recurring, varies by service events.
+- "Message and data rates may apply."
+- Opt-out: reply STOP to unsubscribe (state the effect).
+- Help: reply HELP; include a support email and phone.
+- Privacy: include the CTIA-required statement that HubWise does NOT sell or share mobile
+  opt-in information or consent with third parties/affiliates for marketing purposes; plus
+  what data is collected, how it's used, and retention.
+- Standard T&C: service scope, disclaimers, governing law, contact info, effective date.
+
+BUSINESS DETAILS (confirm/replace placeholders):
+- Trade name: HubWise Technology; website hubwisetech.com; support email hwadmin@hubwisetech.com
+- Address: 3911 South 187th Street, Omaha, NE
+- EXACT legal entity name, support phone, and governing state: LEAVE AS CLEARLY-MARKED
+  PLACEHOLDERS to fill — do not guess these.
+
+OUTPUT: one self-contained HTML file (inline CSS, no external dependencies, mobile-friendly,
+professional, HubWise-branded — reuse HubWise brand styling if a hubwise-docs skill/brand kit
+is available). It must render correctly as a standalone hosted page.
+
+IMPORTANT: This is template legal content, not legal advice — add a short note recommending
+review by HubWise's attorney before publishing, and flag every placeholder to complete.
+```
+
+### Handoff Prompt B — resume TFV + HA cabinet alerts (run after the page is live)
+
+```
+Resume a Home Assistant + Twilio SMS project. The SMS policy page is now live at
+https://SMSPolicy.hubwisetech.net. Pick up from there.
+
+FULL STATE is in this repo at docs/09-integrations-status.md, section "Cabinet alerting"
+(repo: github.com/scottfywil/homeassistant; local clone
+C:\Users\scottyfwil\Documents\Claude\Projects\homeassistant; GitOps = push to main and the
+Git pull add-on deploys to the box). READ THAT SECTION FIRST.
+
+BROWSER: drive HA + Twilio via the "Claude in Chrome" tools. HA at http://homeassistant.local:8123;
+Twilio console at 1console.twilio.com. Multiple Chromes are usually connected — the
+HA/Twilio one is deviceId f2925e1f-bf50-4691-9065-d5216b8cc3e1 (select it; ignore the
+shifting display name). I'll enter credentials/payment/attestations myself.
+
+TASK A — Finish Toll-Free Verification for (877) 600-5343 (mid-registration, using the
+approved HubWise BUSINESS profile):
+- Opt-in type = Paper form (signed MSA). Use https://SMSPolicy.hubwisetech.net for the
+  opt-in-documentation URL, Terms & Conditions URL, and Privacy policy URL.
+- Use case category: Customer Care (fallback Notifications). Description (<=500 chars):
+  "HubWise Technology, a managed IT services provider, sends service and operational SMS to
+  clients and staff — primarily out-of-band incident/outage alerts (e.g., texting client
+  contacts when their email is down), plus ticket and service updates. Transactional messaging
+  only; no marketing or promotional content."
+- Samples: "HubWise Alert: We've detected an outage affecting your email/service and are
+  working to restore it. We'll text updates here. Reply STOP to opt out." (+2 similar).
+  STOP=opt-out, HELP=help. Volume ~500/mo. Review with me, then I submit. Approval takes days.
+
+TASK B — After TFV APPROVED, build the cabinet-alert automation:
+- Confirm SNZB-04P sensors paired/named/area-assigned in Z2M: "Liquor Cabinet" (Kitchen),
+  "Bar Cabinet Left" + "Bar Cabinet Right" (Rec Room).
+- I put secrets into /config/secrets.yaml on the box FIRST (keys listed in docs/09) — do not
+  push the package before secrets exist or config check fails.
+- Create packages/cabinet_alerts.yaml via a commit to main: a binary_sensor group per cabinet
+  (either door = open) + notify on open via BOTH SMTP2GO email and Twilio SMS (from
+  +18776005343 to both recipients) + separate tamper alerts. Keep text matching the registered
+  samples. Verify, then test with a real cabinet open.
+
+Start by reading docs/09, then confirm Twilio's current console state before acting.
+```
 
 ## Not yet started
 
