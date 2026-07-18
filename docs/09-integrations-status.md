@@ -265,13 +265,16 @@ number as a **HubWise customer-care/outage-notification tool**. Channels: **emai
 **Latest status (2026-07-18):** HubWise **Business** compliance profile is **Approved** (the
 earlier Individual profile was rejected by TFV). Toll-free registration is mid-form; use case
 broadened to HubWise MSP service/outage notifications (Customer Care), consent via signed MSA
-(opt-in type = Paper form). SMS policy page was built, **BUT it is not publicly reachable:
-`smspolicy.hubwisetech.net` returns NXDOMAIN from Cloudflare's authoritative nameservers**
-(checked 2026-07-18 from the public internet; `hubwisetech.net` zone itself resolves fine, and
-`smspolicy.hubwisetech.com` / `sms.hubwisetech.net` are also NXDOMAIN). It may resolve on the
-LAN/internal DNS, but Twilio's reviewer will get a dead link → **TFV cannot be submitted until
-a public DNS record (A/CNAME) for `smspolicy` is added in the Cloudflare zone for
-hubwisetech.net and the page loads publicly over HTTPS.**
+(opt-in type = Paper form). ✅ **SMS policy page LIVE + verified publicly (2026-07-18):**
+`smspolicy.hubwisetech.net` resolves (Cloudflare-proxied A records; an earlier NXDOMAIN that
+day was fixed by adding the DNS record — note stale negative DNS caches can linger ~30 min),
+serves HTTP 200 over HTTPS to all user agents (no Cloudflare challenge), and the content
+passes the TFV checklist: 3 labeled sections (T&C / Privacy / Opt-In Consent), MSA-based
+consent, "Message and data rates may apply", STOP/HELP, frequency-varies, CTIA no-sell/no-share
+statement, no unfilled placeholders (entity "HubWise Technology, Inc.", support
+(402) 339-7441 + hwadmin@hubwisetech.com, governing law Nebraska, effective 2026-07-18).
+**TFV is now UNBLOCKED — next step is pasting the pack below into the senders-onboarding
+form and submitting.**
 
 **Also this session (2026-07-18):** TFV answers finalized (pack below, ready to paste);
 `packages/cabinet_alerts.yaml` pre-staged on branch `claude/homeassistant-twilio-sms-c2pztc`
@@ -334,9 +337,8 @@ still needs the REAL values in `/config/secrets.yaml` before merge: `smtp2go_use
 `twilio_account_sid`, `twilio_auth_token`, `twilio_from_number` (+18776005343),
 `alert_sms_scott`, `alert_sms_wife`.
 
-**Resume checklist:** (1) HubWise business profile Approved ✅ → (2) SMS policy page built ✅
-**but add public DNS record for `smspolicy.hubwisetech.net` (Cloudflare) — page must load
-publicly ⚠️** → (3) finish + submit toll-free verification (pack above; Prompt B below) →
+**Resume checklist:** (1) HubWise business profile Approved ✅ → (2) SMS policy page live +
+publicly verified ✅ → (3) finish + submit toll-free verification (pack above; Prompt B below) →
 (4) TFV approved → (5) confirm cabinet sensors paired/named/area-assigned in Z2M + verify
 entity IDs → (6) fill real secrets into `/config/secrets.yaml` on the box → (7) merge the
 `cabinet_alerts.yaml` draft PR to main → (8) test with a real cabinet open.
