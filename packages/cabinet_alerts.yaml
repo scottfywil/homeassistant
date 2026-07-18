@@ -1,0 +1,127 @@
+# Cabinet open/tamper alerts — email (SMTP2GO) + SMS (Twilio toll-free).
+#
+# DO NOT MERGE TO MAIN until BOTH are true (GitOps deploys main to the box):
+#   1. Twilio toll-free verification for +1 (877) 600-5343 is APPROVED.
+#   2. The real values for every !secret key below exist in /config/secrets.yaml
+#      on the box (CI passes with secrets.yaml.example; the box needs real ones).
+#
+# Sensors: SONOFF SNZB-04P via Zigbee2MQTT. Entity IDs below assume the Z2M
+# friendly names "Liquor Cabinet", "Bar Cabinet Left", "Bar Cabinet Right" —
+# verify the actual IDs after pairing and adjust if they differ.
+# SMS text mirrors the message samples registered with Twilio TFV.
+
+twilio:
+  account_sid: !secret twilio_account_sid
+  auth_token: !secret twilio_auth_token
+
+binary_sensor:
+  - platform: group
+    name: "Liquor Cabinet Doors"
+    unique_id: liquor_cabinet_doors
+    device_class: opening
+    entities:
+      - binary_sensor.liquor_cabinet_contact
+
+  - platform: group
+    name: "Bar Cabinet Doors"
+    unique_id: bar_cabinet_doors
+    device_class: opening
+    entities:
+      - binary_sensor.bar_cabinet_left_contact
+      - binary_sensor.bar_cabinet_right_contact
+
+notify:
+  - platform: smtp
+    name: alert_email
+    server: mail.smtp2go.com
+    port: 587
+    encryption: starttls
+    username: !secret smtp2go_username
+    password: !secret smtp2go_password
+    sender: !secret alert_sender
+    sender_name: "HubWise Alerts"
+    recipient:
+      - !secret alert_email_scott
+      - !secret alert_email_wife
+
+  - platform: twilio_sms
+    name: alert_sms
+    from_number: !secret twilio_from_number
+
+automation:
+  - alias: "Cabinet - Liquor Cabinet opened"
+    id: cabinet_liquor_opened
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.liquor_cabinet_doors
+        from: "off"
+        to: "on"
+    actions:
+      - action: notify.alert_email
+        data:
+          title: "Liquor Cabinet opened"
+          message: >-
+            Liquor Cabinet (Kitchen) opened —
+            {{ now().strftime('%b %-d, %-I:%M %p') }}.
+      - action: notify.alert_sms
+        data:
+          message: >-
+            HubWise Ops Alert: Facility sensor 'Liquor Cabinet' opened —
+            {{ now().strftime('%b %-d, %-I:%M %p') }}.
+            Reply HELP for help or STOP to opt out.
+          target:
+            - !secret alert_sms_scott
+            - !secret alert_sms_wife
+
+  - alias: "Cabinet - Bar Cabinet opened"
+    id: cabinet_bar_opened
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.bar_cabinet_doors
+        from: "off"
+        to: "on"
+    actions:
+      - action: notify.alert_email
+        data:
+          title: "Bar Cabinet opened"
+          message: >-
+            Bar Cabinet (Rec Room, either door) opened —
+            {{ now().strftime('%b %-d, %-I:%M %p') }}.
+      - action: notify.alert_sms
+        data:
+          message: >-
+            HubWise Ops Alert: Facility sensor 'Bar Cabinet' opened —
+            {{ now().strftime('%b %-d, %-I:%M %p') }}.
+            Reply HELP for help or STOP to opt out.
+          target:
+            - !secret alert_sms_scott
+            - !secret alert_sms_wife
+
+  - alias: "Cabinet - sensor tamper detected"
+    id: cabinet_tamper_alert
+    mode: queued
+    triggers:
+      - trigger: state
+        entity_id:
+          - binary_sensor.liquor_cabinet_tamper
+          - binary_sensor.bar_cabinet_left_tamper
+          - binary_sensor.bar_cabinet_right_tamper
+        from: "off"
+        to: "on"
+    actions:
+      - action: notify.alert_email
+        data:
+          title: "Cabinet sensor tamper"
+          message: >-
+            Tamper detected on {{ trigger.to_state.name }} —
+            {{ now().strftime('%b %-d, %-I:%M %p') }}.
+      - action: notify.alert_sms
+        data:
+          message: >-
+            HubWise Ops Alert: Tamper detected on facility sensor
+            '{{ trigger.to_state.name }}' —
+            {{ now().strftime('%b %-d, %-I:%M %p') }}.
+            Reply HELP for help or STOP to opt out.
+          target:
+            - !secret alert_sms_scott
+            - !secret alert_sms_wife

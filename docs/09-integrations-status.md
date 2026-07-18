@@ -1,7 +1,7 @@
 # 09 — Integrations Status (living doc)
 
 Snapshot of what's actually running on the box. Update as integrations are
-added. Last updated: **2026-07-16**.
+added. Last updated: **2026-07-18**.
 
 ## Platform state
 
@@ -256,19 +256,29 @@ control.
 - Note: **Assist** (local voice) still auto-exposes (75 entities) — local only, left as-is;
   trim later if desired.
 
-## Cabinet alerting — IN PROGRESS, on hold for SMS policy page (updated 2026-07-17)
+## Cabinet alerting — IN PROGRESS, blocked on policy-page DNS (updated 2026-07-18)
 
 **Goal:** notify Scott + wife whenever the liquor/bar cabinets open, AND double the toll-free
 number as a **HubWise customer-care/outage-notification tool**. Channels: **email
 (SMTP2GO, ready)** + **SMS (Twilio)**. Companion-app push was declined by user.
 
-**Latest status (2026-07-17):** HubWise **Business** compliance profile is **Approved** (the
+**Latest status (2026-07-18):** HubWise **Business** compliance profile is **Approved** (the
 earlier Individual profile was rejected by TFV). Toll-free registration is mid-form; use case
 broadened to HubWise MSP service/outage notifications (Customer Care), consent via signed MSA
-(opt-in type = Paper form). **Blocked on:** building an SMS policy page (T&C + Privacy +
-Opt-In) to host at **https://SMSPolicy.hubwisetech.net** — Twilio needs that URL for the
-opt-in-documentation / T&C / privacy fields. Two handoff prompts for this are recorded at the
-end of this section.
+(opt-in type = Paper form). SMS policy page was built, **BUT it is not publicly reachable:
+`smspolicy.hubwisetech.net` returns NXDOMAIN from Cloudflare's authoritative nameservers**
+(checked 2026-07-18 from the public internet; `hubwisetech.net` zone itself resolves fine, and
+`smspolicy.hubwisetech.com` / `sms.hubwisetech.net` are also NXDOMAIN). It may resolve on the
+LAN/internal DNS, but Twilio's reviewer will get a dead link → **TFV cannot be submitted until
+a public DNS record (A/CNAME) for `smspolicy` is added in the Cloudflare zone for
+hubwisetech.net and the page loads publicly over HTTPS.**
+
+**Also this session (2026-07-18):** TFV answers finalized (pack below, ready to paste);
+`packages/cabinet_alerts.yaml` pre-staged on branch `claude/homeassistant-twilio-sms-c2pztc`
+(draft PR — DO NOT merge to main until TFV approved + real secrets on the box; CI passes via
+the new placeholder keys added to `secrets.yaml.example`). Cloud sessions have no browser
+access to the Twilio console / HA UI — console steps need a desktop session with Claude in
+Chrome, or Scott pasting the pack manually.
 
 **Contact sensors — SONOFF SNZB-04P Gen2 (4-pack), user pairing manually in Z2M:**
 - Kitchen liquor cabinet = **1 door** → sensor "**Liquor Cabinet**" (Kitchen). *(Was mounted;
@@ -286,30 +296,50 @@ end of this section.
 - Account SID + auth token are **not recorded here** (they live only in `secrets.yaml` on
   the box when set — find the SID on the Twilio Console home page).
 
-**Drafted toll-free verification answers (paste when TFV form is reachable):**
-- Use case category: **Security Alert** (fallback: Notifications). Volume ~50/mo.
-- Use case: private home-automation alerts from the owner's Home Assistant to the 2
-  household members; triggered by their own door/cabinet/tamper sensors; no marketing,
-  no third-party/purchased recipients, no public sign-up.
-- Opt-in: **Verbal** — the 2 recipients (owner + spouse) consented directly; numbers
-  entered manually into the system config; reply STOP to opt out, HELP for help.
-- Sample msg: `Home Alert: Liquor Cabinet opened — Jul 16, 9:42 PM. Reply STOP to opt out.`
+**FINALIZED toll-free verification pack (paste into the senders-onboarding form once the
+policy URL resolves publicly):**
+- Number: **(877) 600-5343** · Compliance profile: **HubWise (Business, Approved)**
+- Use case category: **Customer Care** (fallback: **Notifications**) · Volume: **~500/mo**
+  (pick the 1,000 tier if the form only offers fixed tiers).
+- Use case description (≤500 chars, verbatim):
+  > HubWise Technology, a managed IT services provider, sends service and operational SMS
+  > to clients and staff — primarily out-of-band incident/outage alerts (e.g., texting
+  > client contacts when their email is down), plus ticket and service updates.
+  > Transactional messaging only; no marketing or promotional content.
+- Opt-in type: **Paper form** (consent via signed MSA — clients authorize service SMS to
+  the mobile contacts they provide; numbers come only from signed client records).
+- Opt-in documentation URL, Terms & Conditions URL, Privacy policy URL — all three:
+  **https://SMSPolicy.hubwisetech.net**
+- Message samples (3):
+  1. `HubWise Alert: We've detected an outage affecting your email/service and are working
+     to restore it. We'll text updates here. Reply STOP to opt out.`
+  2. `HubWise Update: Ticket #4821 — the issue you reported has been resolved. If you're
+     still having trouble, reply HELP or call us. Reply STOP to opt out.`
+  3. `HubWise Ops Alert: Facility sensor 'Bar Cabinet' opened — Jul 16, 9:42 PM. Reply HELP
+     for help or STOP to opt out.`
+  (Sample 3 covers the internal operational/facility alerts — the cabinet automation's SMS
+  text mirrors it exactly.)
+- STOP = opt out, HELP = help. Transactional only; no marketing.
 
-**Planned package (DO NOT build until Twilio TFV is approved — per user):**
+**Package — BUILT, staged on branch `claude/homeassistant-twilio-sms-c2pztc` (2026-07-18,
+draft PR; DO NOT merge until TFV approved + secrets on box):**
 `packages/cabinet_alerts.yaml`: binary-sensor *group* per cabinet (either door = open) →
-notify **email + SMS** on open; separate **tamper** alerts. Keep message text matching the
-registered sample. Notifiers: SMTP2GO SMTP + Twilio (`notify.twilio`).
-**Secrets prerequisite** (user types into `/config/secrets.yaml` BEFORE the package is
-pushed, or CI/config-check fails on missing `!secret`): `smtp2go_username`,
+notify **email + SMS** on open; separate **tamper** alert (all 3 tamper sensors). SMS text
+mirrors registered sample 3. Notifiers: SMTP2GO SMTP (`notify.alert_email`) + Twilio
+(`notify.alert_sms`, from +18776005343). Entity IDs assume Z2M names "Liquor Cabinet",
+"Bar Cabinet Left/Right" → `binary_sensor.<slug>_contact`/`_tamper` — **verify after
+pairing**. Placeholder keys were added to `secrets.yaml.example` so CI passes; the box
+still needs the REAL values in `/config/secrets.yaml` before merge: `smtp2go_username`,
 `smtp2go_password`, `alert_sender`, `alert_email_scott`, `alert_email_wife`,
 `twilio_account_sid`, `twilio_auth_token`, `twilio_from_number` (+18776005343),
 `alert_sms_scott`, `alert_sms_wife`.
 
-**Resume checklist:** (1) HubWise business profile Approved ✅ → (2) build+host SMS policy
-page at SMSPolicy.hubwisetech.net (Prompt A below) → (3) finish + submit toll-free
-verification (Prompt B below) → (4) TFV approved → (5) confirm cabinet sensors
-paired/named/area-assigned → (6) fill secrets.yaml → (7) push `cabinet_alerts.yaml` → (8)
-test with a real cabinet open.
+**Resume checklist:** (1) HubWise business profile Approved ✅ → (2) SMS policy page built ✅
+**but add public DNS record for `smspolicy.hubwisetech.net` (Cloudflare) — page must load
+publicly ⚠️** → (3) finish + submit toll-free verification (pack above; Prompt B below) →
+(4) TFV approved → (5) confirm cabinet sensors paired/named/area-assigned in Z2M + verify
+entity IDs → (6) fill real secrets into `/config/secrets.yaml` on the box → (7) merge the
+`cabinet_alerts.yaml` draft PR to main → (8) test with a real cabinet open.
 
 ### Handoff Prompt A — build the SMS policy page (run in a fresh session first)
 
