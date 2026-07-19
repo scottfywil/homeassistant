@@ -352,9 +352,10 @@ still needs the REAL values in `/config/secrets.yaml` before merge: `smtp2go_use
 publicly verified ✅ → (3) toll-free verification submitted ✅ 2026-07-18 → (4) **TFV approved
 ⏳ (in review — check Twilio Console → Phone Numbers → Regulatory Compliance → Toll-Free
 Verification)** → (5) confirm cabinet sensors paired/named/area-assigned in Z2M + verify
-entity IDs (approval-independent, do now) → (6) fill real secrets into `/config/secrets.yaml`
-on the box (approval-independent, do now) → (7) merge the `cabinet_alerts.yaml` draft PR
-(#1) to main → (8) test with a real cabinet open.
+entity IDs ⏳ (approval-independent, do now) → (6) real secrets in `/config/secrets.yaml` on
+the box ✅ 2026-07-18 (all 10 keys: SMTP2GO + Twilio + recipients; entered via web terminal)
+→ (7) merge the `cabinet_alerts.yaml` draft PR (#1) to main → (8) test with a real cabinet
+open.
 
 ### Handoff Prompt A — build the SMS policy page (run in a fresh session first)
 
