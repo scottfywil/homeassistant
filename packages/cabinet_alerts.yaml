@@ -5,9 +5,13 @@
 #   2. The real values for every !secret key below exist in /config/secrets.yaml
 #      on the box (CI passes with secrets.yaml.example; the box needs real ones).
 #
-# Sensors: SONOFF SNZB-04P via Zigbee2MQTT. Entity IDs below assume the Z2M
-# friendly names "Liquor Cabinet", "Bar Cabinet Left", "Bar Cabinet Right" —
-# verify the actual IDs after pairing and adjust if they differ.
+# Sensors: SONOFF SNZB-04P via Zigbee2MQTT. Entity IDs are the Z2M IEEE-address
+# defaults (the nice "Liquor Cabinet"/"Bar Cabinet L/R" names are HA device
+# name_by_user overrides applied AFTER discovery, so they change friendly_name
+# only — the entity_id stays IEEE-based). Verified live via the HA API 2026-07-19:
+#   Liquor Cabinet     -> binary_sensor.0xa4c13811e7d6ffff_{contact,tamper}  (Kitchen)
+#   Bar Cabinet Left   -> binary_sensor.0xa4c13812a7e0ffff_{contact,tamper}  (Rec Room)
+#   Bar Cabinet Right  -> binary_sensor.0xa4c138121bcbffff_{contact,tamper}  (Rec Room)
 # SMS text mirrors the message samples registered with Twilio TFV.
 
 twilio:
@@ -20,15 +24,15 @@ binary_sensor:
     unique_id: liquor_cabinet_doors
     device_class: opening
     entities:
-      - binary_sensor.liquor_cabinet_contact
+      - binary_sensor.0xa4c13811e7d6ffff_contact  # Liquor Cabinet (Kitchen)
 
   - platform: group
     name: "Bar Cabinet Doors"
     unique_id: bar_cabinet_doors
     device_class: opening
     entities:
-      - binary_sensor.bar_cabinet_left_contact
-      - binary_sensor.bar_cabinet_right_contact
+      - binary_sensor.0xa4c13812a7e0ffff_contact  # Bar Cabinet Left (Rec Room)
+      - binary_sensor.0xa4c138121bcbffff_contact  # Bar Cabinet Right (Rec Room)
 
 notify:
   - platform: smtp
@@ -103,9 +107,9 @@ automation:
     triggers:
       - trigger: state
         entity_id:
-          - binary_sensor.liquor_cabinet_tamper
-          - binary_sensor.bar_cabinet_left_tamper
-          - binary_sensor.bar_cabinet_right_tamper
+          - binary_sensor.0xa4c13811e7d6ffff_tamper  # Liquor Cabinet (Kitchen)
+          - binary_sensor.0xa4c13812a7e0ffff_tamper  # Bar Cabinet Left (Rec Room)
+          - binary_sensor.0xa4c138121bcbffff_tamper  # Bar Cabinet Right (Rec Room)
         from: "off"
         to: "on"
     actions:

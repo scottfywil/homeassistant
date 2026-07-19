@@ -351,9 +351,15 @@ still needs the REAL values in `/config/secrets.yaml` before merge: `smtp2go_use
 **Resume checklist:** (1) HubWise business profile Approved ✅ → (2) SMS policy page live +
 publicly verified ✅ → (3) toll-free verification submitted ✅ 2026-07-18 → (4) **TFV approved
 ⏳ (in review — check Twilio Console → Phone Numbers → Regulatory Compliance → Toll-Free
-Verification)** → (5) cabinet sensors verified ✅ 2026-07-18 — all six entities present in Dev Tools → States
-with the exact IDs the package expects (liquor_cabinet / bar_cabinet_left / bar_cabinet_right
-× contact + tamper), incl. the previously-doubtful Liquor Cabinet → (6) real secrets in
+Verification)** → (5) cabinet sensors verified ✅ — all six entities present, but ⚠️ **their
+actual entity IDs are the Z2M IEEE-address defaults, NOT the friendly-name slugs** (corrected
+via live HA API 2026-07-19; the earlier "exact IDs the package expects" claim was wrong — the
+nice names are HA `name_by_user` device overrides applied post-discovery, which change
+`friendly_name` only, so `entity_id` stayed IEEE-based). Real IDs (all healthy: 100% battery,
+3200mV, correct areas): Liquor Cabinet = `binary_sensor.0xa4c13811e7d6ffff_{contact,tamper}`
+(Kitchen); Bar Cabinet Left = `0xa4c13812a7e0ffff` (Rec Room); Bar Cabinet Right =
+`0xa4c138121bcbffff` (Rec Room). **`packages/cabinet_alerts.yaml` updated on the branch to use
+these real IDs** (2026-07-19). → (6) real secrets in
 `/config/secrets.yaml` on the box ✅ 2026-07-18 (all 10 keys: SMTP2GO + Twilio + recipients)
 → (7) merge the `cabinet_alerts.yaml` draft PR (#1) to main → (8) test with a real cabinet
 open.
