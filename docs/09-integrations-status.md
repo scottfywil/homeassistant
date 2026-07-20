@@ -74,7 +74,7 @@ symlinks) · Git pull · Tailscale · Terminal & SSH.
 | Plex Media Server (`plex`) | 1 server | "WilsonMedia" PMS on a PC @ **172.16.105.180** (libraries on Synology NAS01 @ .100). Local; linked via plex.tv (account has a 2nd shared server "JAKES-PC" — not added). `sensor.wilsonmedia` = active streams; per-client `media_player` entities appear dynamically when Plex clients play (or via "Scan clients"). Server device left unassigned (infra) |
 | QNAP (TS-653A) | 1 (+36 disabled) | NAS monitoring, admin acct, host:8080 SSL off → Utility Room area. NAS self-reports "warning" status — check QTS |
 | QHM-1134 LED BLE | 1 | RGB/W controller (`led_ble`) |
-| Blink | 6 | cloud; cams Back/Front Yard, Living Room, Basement, Camper + sync module. Camper out of scope |
+| ~~Blink~~ | 0 (was 6) | ⚠️ **BROKEN — entry removed 2026-07-19.** Upstream OAuth v2 break (HA `blink` vs `blinkpy` 0.25.x); auth fails despite valid creds. Parked pending upstream fix — see Blink note below |
 | Tuya / Smart Life | 11 | cloud; user-code flow. Mostly outdoor plugs/switches (see area notes) |
 | Google Nest | 2 (6 entities) | Family Room thermostat → Living Room; Garage camera → Garage. SDM + Pub/Sub events enabled. See setup notes below |
 | Vivint (HACS: `natekspencer/ha-vivint`) | 13 active (of 17; 4 disabled) | cloud; user/pass + MFA. **Read-only posture** (pro-monitored). Alarm panel, 2 Kwikset locks, door/window + glass-break + motion sensors, cameras. Garage (×3) + duplicate Nest disabled — see Vivint notes below. Vivint pre-mapped some to Areas |
@@ -150,6 +150,37 @@ symlinks) · Git pull · Tailscale · Terminal & SSH.
 - **To revisit later:** check for a newer ha-wyzeapi release / recent issues mentioning HAOS
   or Python 3.14; ground-truth the chain with `openssl s_client -showcerts api.wyzecam.com:443`
   from the **Core** container; cameras would need a separate `docker-wyze-bridge` regardless.
+
+### Blink note (BROKEN — upstream OAuth v2 break, config entry REMOVED 2026-07-19)
+- **Was working** at setup (~2026-07-10); **stopped authenticating ~2026-07-14.** All 12
+  entities went `unavailable`; config entry stuck in `setup_retry`.
+- **Root cause = upstream, not our config or credentials** (website login works fine). In
+  **Nov 2025 Blink switched their API to OAuth 2.0 + PKCE**; `blinkpy` 0.25.x implements it
+  but the **HA `blink` integration wasn't updated to match**, and `blinkpy` changed device
+  identity from `device_id`→`hardware_id` so stored entries have no `hardware_id` → a new
+  random UUID is generated each run → **token refresh always fails**. Debug log confirmed:
+  `blinkpy.auth: Attempting OAuth v2 token refresh` → `Attempting OAuth v2 login flow` →
+  `OAuth authorization request failed` (fails in ~45 ms, every 40/80 s forever). The retry
+  loop also **keeps the account throttled**, and a related bug **drops the session cookie
+  during 2FA** so even a fresh add that reaches the PIN screen fails ("Invalid Authentication").
+  Non-Amazon-linked accounts especially affected.
+  - Tracking: [core #158760](https://github.com/home-assistant/core/issues/158760) (integration
+    incompatible w/ blinkpy 0.25.x), [core #168029](https://github.com/home-assistant/core/issues/168029),
+    [blinkpy #1217](https://github.com/fronzbot/blinkpy/issues/1217),
+    [blinkpy #1230](https://github.com/fronzbot/blinkpy/issues/1230) (SMS code sent, PIN never verifies).
+- **What we tried (2026-07-19, via HA REST/WS API from the LAN):** disabled to stop the loop
+  → waited out throttle → re-enabled → restart to force a debug-logged attempt (confirmed the
+  OAuth v2 failure) → **deleted the entry** and did a clean fresh add → still "Invalid
+  Authentication". Core/OS/Supervisor all fully up to date (2026.7.2 / 18.1 / 2026.07.3), so
+  no HA-side fix available yet.
+- **Config entry deleted** (clean slate — avoids the background retry loop re-throttling the
+  account). HA is on **core 2026.7.2**; a fix ships upstream via a future core update.
+- **To revisit / re-add when fixed:** watch the tracking issues + HA release notes for a
+  `blink`/`blinkpy` OAuth-v2 fix. Then **Settings → Devices & Services → Add Integration →
+  Blink** → email/password → fresh 2FA PIN (newest code, <60 s, no spaces). **Device→area
+  map to restore after re-add** (captured before delete): Front Yard→**Front Yard**, Back
+  Yard→**Back Yard**, Living Room→**Living Room**, blink Home (sync module)→**Rec Room**,
+  Basement→**Rec Room**, Camper→unassigned (out of scope).
 
 ### Govee (full ecosystem) note (WORKING via API-key mode, 2026-07-15)
 - Full Govee account now in HA via **govee2mqtt** (`wez/govee2mqtt`, add-on **v2026.03.25**),
