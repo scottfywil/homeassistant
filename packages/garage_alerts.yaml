@@ -1,0 +1,116 @@
+# Garage-open overnight alert. Email only for now; SMS drops in once Twilio
+# TFV is approved (see docs/09-integrations-status.md, "Cabinet alerting").
+# Distinct notifier name (garage_alert_email) so it won't collide with the
+# cabinet package's notifier when that later merges.
+notify:
+  - name: garage_alert_email
+    platform: smtp
+    sender: !secret alert_sender
+    recipient:
+      - !secret alert_email_scott
+    server: mail.smtp2go.com
+    port: 587
+    username: !secret smtp2go_username
+    password: !secret smtp2go_password
+    encryption: starttls
+
+input_boolean:
+  garage_dad_alerted:
+    name: Garage Dad Alerted
+    icon: mdi:garage-alert
+  garage_mom_alerted:
+    name: Garage Mom Alerted
+    icon: mdi:garage-alert
+
+automation:
+  - alias: "Garage - Dad open too long (overnight)"
+    id: garage_dad_open_overnight
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.0xffffb40e0601d430_contact
+        to: "on"
+        for: "00:10:00"
+    conditions:
+      - condition: time
+        after: "22:00:00"
+        before: "05:00:00"
+    actions:
+      - action: notify.garage_alert_email
+        data:
+          title: "Garage Alert"
+          message: >-
+            Dad garage door has been open since
+            {{ as_local(trigger.to_state.last_changed).strftime('%-I:%M %p') }}
+            (10+ minutes).
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.garage_dad_alerted
+          # TODO(TFV): add a notify.alert_sms action here once Twilio toll-free
+          # verification is approved — reuse the cabinet package's Twilio
+          # notifier, do NOT declare a second `twilio:` block (it's a global key).
+
+  - alias: "Garage - Dad closed all-clear"
+    id: garage_dad_closed_all_clear
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.0xffffb40e0601d430_contact
+        to: "off"
+    conditions:
+      - condition: state
+        entity_id: input_boolean.garage_dad_alerted
+        state: "on"
+    actions:
+      - action: notify.garage_alert_email
+        data:
+          title: "Garage Alert - All Clear"
+          message: "Dad garage door is now closed."
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.garage_dad_alerted
+          # TODO(TFV): add a notify.alert_sms all-clear action once Twilio TFV is approved.
+
+  - alias: "Garage - Mom open too long (overnight)"
+    id: garage_mom_open_overnight
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.mom_garage_sensor_contact
+        to: "on"
+        for: "00:10:00"
+    conditions:
+      - condition: time
+        after: "22:00:00"
+        before: "05:00:00"
+    actions:
+      - action: notify.garage_alert_email
+        data:
+          title: "Garage Alert"
+          message: >-
+            Mom garage door has been open since
+            {{ as_local(trigger.to_state.last_changed).strftime('%-I:%M %p') }}
+            (10+ minutes).
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.garage_mom_alerted
+          # TODO(TFV): add a notify.alert_sms action here once Twilio toll-free
+          # verification is approved — reuse the cabinet package's Twilio
+          # notifier, do NOT declare a second `twilio:` block (it's a global key).
+
+  - alias: "Garage - Mom closed all-clear"
+    id: garage_mom_closed_all_clear
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.mom_garage_sensor_contact
+        to: "off"
+    conditions:
+      - condition: state
+        entity_id: input_boolean.garage_mom_alerted
+        state: "on"
+    actions:
+      - action: notify.garage_alert_email
+        data:
+          title: "Garage Alert - All Clear"
+          message: "Mom garage door is now closed."
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.garage_mom_alerted
+          # TODO(TFV): add a notify.alert_sms all-clear action once Twilio TFV is approved.
