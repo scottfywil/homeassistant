@@ -1,5 +1,7 @@
 # Garage-Open Overnight Alert Implementation Plan
 
+> **Status: COMPLETE (2026-07-20).** Merged via [PR #2](https://github.com/scottfywil/homeassistant/pull/2), CI green, deployed. Post-deploy verification passed: all 6 entities live, Jinja timestamp template confirmed America/Chicago (not UTC), and a real test email via `notify.garage_alert_email` was received by Scott — SMTP2GO delivery confirmed end-to-end. See `docs/09-integrations-status.md`, "Garage-open overnight alert" for the living-doc summary.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Email Scott when either garage's contact sensor is open ≥10 continuous minutes between 22:00–05:00 (America/Chicago), plus an all-clear when it closes, per `docs/superpowers/specs/2026-07-19-garage-open-alert-design.md`.
@@ -32,7 +34,7 @@
 
 The spec assumes `smtp2go_username`, `smtp2go_password`, `alert_sender`, `alert_email_scott` already exist in `secrets.yaml.example`. Verified 2026-07-20: **they don't** — the file currently only has WiFi/ESPHome/MQTT keys. CI does `cp secrets.yaml.example secrets.yaml` before the HA config check, so without this the `ha-config` CI job will fail on missing `!secret` references the moment the package references them.
 
-- [ ] **Step 1: Append an email-alerts section to `secrets.yaml.example`**
+- [x] **Step 1: Append an email-alerts section to `secrets.yaml.example`**
 
 Add after the existing `--- MQTT ---` block:
 
@@ -45,7 +47,7 @@ alert_sender: "alerts@example.com"
 alert_email_scott: "scott@example.com"
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add secrets.yaml.example
@@ -63,7 +65,7 @@ git commit -m "chore(secrets): add SMTP2GO/email-alert secret placeholders for g
 - Consumes: `!secret smtp2go_username`, `!secret smtp2go_password`, `!secret alert_sender`, `!secret alert_email_scott` (added in Task 1); entity IDs `binary_sensor.0xffffb40e0601d430_contact`, `binary_sensor.mom_garage_sensor_contact`.
 - Produces: `notify.garage_alert_email`, `input_boolean.garage_dad_alerted`, `input_boolean.garage_mom_alerted`, automations `garage_dad_open_overnight`, `garage_dad_closed_all_clear`, `garage_mom_open_overnight`, `garage_mom_closed_all_clear`.
 
-- [ ] **Step 1: Write the package file**
+- [x] **Step 1: Write the package file**
 
 ```yaml
 # Garage-open overnight alert. Email only for now; SMS drops in once Twilio
@@ -184,16 +186,16 @@ automation:
       # TODO(TFV): add a notify.alert_sms all-clear action once Twilio TFV is approved.
 ```
 
-- [ ] **Step 2: Confirm the SMTP2GO `server`/`port`/`encryption` values**
+- [x] **Step 2: Confirm the SMTP2GO `server`/`port`/`encryption` values**
 
 `mail.smtp2go.com` / `587` / `starttls` are SMTP2GO's standard published relay settings, but they aren't recorded anywhere in this repo (no prior YAML `notify:` block exists to copy from) and haven't been verified against this account. Flag to Scott before merge; if wrong, swap to whatever SMTP2GO's dashboard shows for this account (alternate ports: 2525, 8025, 465-SSL).
 
-- [ ] **Step 3: Run yamllint locally**
+- [x] **Step 3: Run yamllint locally**
 
 Run: `pip install yamllint && yamllint packages/garage_alerts.yaml secrets.yaml.example`
 Expected: exit 0, no output.
 
-- [ ] **Step 4: Sanity-check every `!secret` reference resolves**
+- [x] **Step 4: Sanity-check every `!secret` reference resolves**
 
 Run:
 ```bash
@@ -203,7 +205,7 @@ done
 ```
 Expected: `OK` for all four keys (`smtp2go_username`, `smtp2go_password`, `alert_sender`, `alert_email_scott`), no `MISSING` lines.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/garage_alerts.yaml
@@ -216,7 +218,7 @@ git commit -m "feat(garage): add overnight garage-open email alert package"
 
 **Files:** none (delivery step, per the spec's "Delivery / verification" section)
 
-- [ ] **Step 1: Push a short-lived branch and open CI**
+- [x] **Step 1: Push a short-lived branch and open CI**
 
 ```bash
 git checkout -b garage-open-alert
@@ -224,16 +226,16 @@ git push -u origin garage-open-alert
 ```
 Expected: GitHub Actions runs `yamllint`, `ha-config`, and `esphome` jobs on the branch/PR.
 
-- [ ] **Step 2: Confirm all three CI jobs are green**
+- [x] **Step 2: Confirm all three CI jobs are green**
 
 Check via `gh run list --branch garage-open-alert` / `gh run view <run-id>`, or the PR's checks tab.
 Expected: `yamllint`, `Home Assistant config check`, `ESPHome config check` all pass. If `ha-config` fails on a missing secret, re-check Task 1's keys match exactly what Task 2 references.
 
-- [ ] **Step 3: Merge to `main`**
+- [x] **Step 3: Merge to `main`**
 
 Only after explicit user confirmation — merging triggers the Git Pull add-on's auto-deploy (~300s) to the live box, which is real household infrastructure.
 
-- [ ] **Step 4: Post-deploy verification via HA API/UI**
+- [x] **Step 4: Post-deploy verification via HA API/UI**
 
 Confirm all 6 new entities exist and resolve:
 - `automation.garage_dad_open_overnight`, `automation.garage_dad_closed_all_clear`

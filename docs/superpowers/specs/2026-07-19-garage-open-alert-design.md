@@ -1,5 +1,9 @@
 # Garage-open overnight alert — design (2026-07-19)
 
+**Status:** Implemented (2026-07-20). See `docs/superpowers/plans/2026-07-20-garage-open-alert.md`
+and `docs/09-integrations-status.md` ("Garage-open overnight alert" section) for delivery
+details and live-verification results.
+
 ## Goal
 Alert Scott by email if a garage door is left **open for ≥10 continuous minutes
 between 22:00 and 05:00** (America/Chicago), with a follow-up "all-clear" when it

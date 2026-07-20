@@ -1,7 +1,7 @@
 # 09 — Integrations Status (living doc)
 
 Snapshot of what's actually running on the box. Update as integrations are
-added. Last updated: **2026-07-16**.
+added. Last updated: **2026-07-20**.
 
 ## Platform state
 
@@ -287,6 +287,41 @@ control.
 - Note: **Assist** (local voice) still auto-exposes (75 entities) — local only, left as-is;
   trim later if desired.
 
+## Garage-open overnight alert — done 2026-07-20
+
+**Goal:** email Scott if either garage's contact sensor is left open 10+ continuous minutes
+between 22:00–05:00 America/Chicago, plus an all-clear when it closes. Design spec:
+[docs/superpowers/specs/2026-07-19-garage-open-alert-design.md](superpowers/specs/2026-07-19-garage-open-alert-design.md);
+implementation plan: [docs/superpowers/plans/2026-07-20-garage-open-alert.md](superpowers/plans/2026-07-20-garage-open-alert.md).
+
+- **Package:** `packages/garage_alerts.yaml` — 2 `input_boolean` flags (re-alert guards), a
+  new `notify.garage_alert_email` (SMTP2GO, distinct name so it won't collide with the future
+  cabinet-alert notifier), and 4 explicit automations (open-too-long + all-clear, per door).
+- **Sensors used:** `binary_sensor.0xffffb40e0601d430_contact` (Dad) and
+  `binary_sensor.mom_garage_sensor_contact` (Mom) — Zigbee contact sensors; no `cover.*`
+  entity exists (MyQ has no cloud path — see "Garage doors" note above), so this is
+  detection-only, no opener control.
+- **Two real bugs caught before merge, not just spec-follow:** (1) `secrets.yaml.example` was
+  missing the `smtp2go_username`/`smtp2go_password`/`alert_sender`/`alert_email_scott` keys
+  the spec assumed already existed — added, or CI's `cp secrets.yaml.example secrets.yaml`
+  step would have failed the config check. (2) First draft templated the alert timestamp off
+  raw `last_changed` (UTC) — would have silently shown UTC wall-clock instead of
+  America/Chicago in every email. Fixed to `as_local(trigger.to_state.last_changed)`.
+- **SMTP2GO relay settings** (`mail.smtp2go.com:587`, STARTTLS) are SMTP2GO's published
+  defaults — not recorded anywhere else in this repo/box, used because no prior `notify:`
+  block existed to copy from. Confirmed working via live test send.
+- ✅ **Verified live 2026-07-20** via HA Developer Tools (Chrome deviceId
+  `f2925e1f-bf50-4691-9065-d5216b8cc3e1`, same one used for HA/Twilio work): all 4
+  `automation.garage_*` + 2 `input_boolean.garage_*_alerted` entities present and enabled;
+  rendered the Jinja timestamp template live (`23:01:57 UTC` → correctly showed `6:01 PM
+  CDT`); called `notify.garage_alert_email` with a real test message — **email received by
+  Scott, confirming SMTP2GO delivery end-to-end.**
+- **SMS deferred:** each action block has a `# TODO(TFV)` marker — add a `notify.alert_sms`
+  action once Twilio toll-free verification is approved (see "Cabinet alerting" below); reuse
+  its Twilio notifier, do not declare a second `twilio:` key.
+- Delivered via PR [#2](https://github.com/scottfywil/homeassistant/pull/2) → CI green
+  (yamllint, HA config check, ESPHome config check) → merged to `main` → GitOps deploy.
+
 ## Cabinet alerting — IN PROGRESS, on hold for SMS policy page (updated 2026-07-17)
 
 **Goal:** notify Scott + wife whenever the liquor/bar cabinets open, AND double the toll-free
@@ -335,6 +370,14 @@ pushed, or CI/config-check fails on missing `!secret`): `smtp2go_username`,
 `smtp2go_password`, `alert_sender`, `alert_email_scott`, `alert_email_wife`,
 `twilio_account_sid`, `twilio_auth_token`, `twilio_from_number` (+18776005343),
 `alert_sms_scott`, `alert_sms_wife`.
+- ✅ `smtp2go_username`/`smtp2go_password`/`alert_sender`/`alert_email_scott` already exist
+  (added + proven working by the garage-alert package, see "Garage-open overnight alert"
+  above — same relay settings, `mail.smtp2go.com:587` STARTTLS, confirmed by a real delivered
+  test email). Only `alert_email_wife` + the five Twilio secrets remain to be added when this
+  package is built. Reuse `notify.garage_alert_email`'s `notify: platform: smtp` block as the
+  template — do **not** declare a second SMTP notifier for the same account; either point
+  cabinet alerts at the same `notify.garage_alert_email` service, or give the cabinet one its
+  own distinct name per the original naming-collision note.
 
 **Resume checklist:** (1) HubWise business profile Approved ✅ → (2) build+host SMS policy
 page at SMSPolicy.hubwisetech.net (Prompt A below) → (3) finish + submit toll-free
