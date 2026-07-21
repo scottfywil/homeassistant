@@ -1,7 +1,7 @@
 # 09 — Integrations Status (living doc)
 
 Snapshot of what's actually running on the box. Update as integrations are
-added. Last updated: **2026-07-20**.
+added. Last updated: **2026-07-21**.
 
 ## Platform state
 
@@ -322,6 +322,30 @@ implementation plan: [docs/superpowers/plans/2026-07-20-garage-open-alert.md](su
 - Delivered via PR [#2](https://github.com/scottfywil/homeassistant/pull/2) → CI green
   (yamllint, HA config check, ESPHome config check) → merged to `main` → GitOps deploy.
 
+## Prusa Lamp print-activity automation — done 2026-07-21
+
+**Goal:** the Workout Room "Prusa Lamp" turns ON while *either* 3D printer is printing and
+OFF when *neither* has an active job.
+
+- **Package:** `packages/workout_prusa_lamp.yaml` — one automation
+  (`automation.workout_prusa_lamp_follow`, `mode: restart`). Triggers on any state change of
+  the two OctoPrint "Printing" binary sensors **and** on `homeassistant` start, then a
+  `choose` re-evaluates both (`condition: state … match: any`, state `on`) → `light.turn_on`,
+  else `light.turn_off`. The start trigger makes it self-correct after a reboot mid-print.
+- **Entities verified live via the HA registry 2026-07-21** (my first-draft guesses were all
+  wrong — same lesson as the cabinet package, so I confirmed before merge):
+  - `binary_sensor.octoprint_printing` — Prusa Mini "Printing"
+  - `binary_sensor.octoprint_printing_2` — Prusa MK3S+ "Printing" (2 OctoPrint entries
+    disambiguate as `…` / `…_2`, order per config-entry setup, **not** friendly name)
+  - `light.0x7cb03eaa00a41f59` — Prusa Lamp (Zigbee bulb; IEEE-based entity_id, like the
+    cabinet contacts)
+- **Known behavior:** OctoPrint's "Printing" binary sensor is **off while a job is paused**,
+  so a paused print currently switches the lamp off. To keep it on through pauses, key off
+  `sensor.octoprint_current_state` (+ `_2`) with state in printing/pausing/paused/resuming
+  instead. Left as-is per current scope; revisit if pauses become annoying.
+- Delivered via PR [#3](https://github.com/scottfywil/homeassistant/pull/3) → CI green
+  (yamllint, HA config check, ESPHome config check) → squash-merged to `main` → GitOps deploy.
+
 ## Cabinet alerting — IN PROGRESS, on hold for SMS policy page (updated 2026-07-17)
 
 **Goal:** notify Scott + wife whenever the liquor/bar cabinets open, AND double the toll-free
@@ -479,4 +503,5 @@ Start by reading docs/09, then confirm Twilio's current console state before act
 ## Not yet started
 
 - ESP32 presence sensors — parts not yet ordered ([08-presence-sensors.md](08-presence-sensors.md)).
-- Automations in `packages/` beyond the starter office-lighting example.
+- More `packages/` automations. Live so far: office-lighting (starter), `garage_alerts.yaml`,
+  `workout_prusa_lamp.yaml`. Staged (gated on Twilio TFV): `cabinet_alerts.yaml` (PR #1).
