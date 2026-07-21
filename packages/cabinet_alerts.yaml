@@ -1,0 +1,131 @@
+# Cabinet open/tamper alerts — email (SMTP2GO) + SMS (Twilio toll-free).
+#
+# DO NOT MERGE TO MAIN until BOTH are true (GitOps deploys main to the box):
+#   1. Twilio toll-free verification for +1 (877) 600-5343 is APPROVED.
+#   2. The real values for every !secret key below exist in /config/secrets.yaml
+#      on the box (CI passes with secrets.yaml.example; the box needs real ones).
+#
+# Sensors: SONOFF SNZB-04P via Zigbee2MQTT. Entity IDs are the Z2M IEEE-address
+# defaults (the nice "Liquor Cabinet"/"Bar Cabinet L/R" names are HA device
+# name_by_user overrides applied AFTER discovery, so they change friendly_name
+# only — the entity_id stays IEEE-based). Verified live via the HA API 2026-07-19:
+#   Liquor Cabinet     -> binary_sensor.0xa4c13811e7d6ffff_{contact,tamper}  (Kitchen)
+#   Bar Cabinet Left   -> binary_sensor.0xa4c13812a7e0ffff_{contact,tamper}  (Rec Room)
+#   Bar Cabinet Right  -> binary_sensor.0xa4c138121bcbffff_{contact,tamper}  (Rec Room)
+# SMS text mirrors the message samples registered with Twilio TFV.
+
+twilio:
+  account_sid: !secret twilio_account_sid
+  auth_token: !secret twilio_auth_token
+
+binary_sensor:
+  - platform: group
+    name: "Liquor Cabinet Doors"
+    unique_id: liquor_cabinet_doors
+    device_class: opening
+    entities:
+      - binary_sensor.0xa4c13811e7d6ffff_contact  # Liquor Cabinet (Kitchen)
+
+  - platform: group
+    name: "Bar Cabinet Doors"
+    unique_id: bar_cabinet_doors
+    device_class: opening
+    entities:
+      - binary_sensor.0xa4c13812a7e0ffff_contact  # Bar Cabinet Left (Rec Room)
+      - binary_sensor.0xa4c138121bcbffff_contact  # Bar Cabinet Right (Rec Room)
+
+notify:
+  - platform: smtp
+    name: alert_email
+    server: mail.smtp2go.com
+    port: 587
+    encryption: starttls
+    username: !secret smtp2go_username
+    password: !secret smtp2go_password
+    sender: !secret alert_sender
+    sender_name: "HubWise Alerts"
+    recipient:
+      - !secret alert_email_scott
+      - !secret alert_email_wife
+
+  - platform: twilio_sms
+    name: alert_sms
+    from_number: !secret twilio_from_number
+
+automation:
+  - alias: "Cabinet - Liquor Cabinet opened"
+    id: cabinet_liquor_opened
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.liquor_cabinet_doors
+        from: "off"
+        to: "on"
+    actions:
+      - action: notify.alert_email
+        data:
+          title: "Liquor Cabinet opened"
+          message: >-
+            Liquor Cabinet (Kitchen) opened —
+            {{ now().strftime('%b %-d, %-I:%M %p') }}.
+      - action: notify.alert_sms
+        data:
+          message: >-
+            HubWise Ops Alert: Facility sensor 'Liquor Cabinet' opened —
+            {{ now().strftime('%b %-d, %-I:%M %p') }}.
+            Reply HELP for help or STOP to opt out.
+          target:
+            - !secret alert_sms_scott
+            - !secret alert_sms_wife
+
+  - alias: "Cabinet - Bar Cabinet opened"
+    id: cabinet_bar_opened
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.bar_cabinet_doors
+        from: "off"
+        to: "on"
+    actions:
+      - action: notify.alert_email
+        data:
+          title: "Bar Cabinet opened"
+          message: >-
+            Bar Cabinet (Rec Room, either door) opened —
+            {{ now().strftime('%b %-d, %-I:%M %p') }}.
+      - action: notify.alert_sms
+        data:
+          message: >-
+            HubWise Ops Alert: Facility sensor 'Bar Cabinet' opened —
+            {{ now().strftime('%b %-d, %-I:%M %p') }}.
+            Reply HELP for help or STOP to opt out.
+          target:
+            - !secret alert_sms_scott
+            - !secret alert_sms_wife
+
+  - alias: "Cabinet - sensor tamper detected"
+    id: cabinet_tamper_alert
+    mode: queued
+    triggers:
+      - trigger: state
+        entity_id:
+          - binary_sensor.0xa4c13811e7d6ffff_tamper  # Liquor Cabinet (Kitchen)
+          - binary_sensor.0xa4c13812a7e0ffff_tamper  # Bar Cabinet Left (Rec Room)
+          - binary_sensor.0xa4c138121bcbffff_tamper  # Bar Cabinet Right (Rec Room)
+        from: "off"
+        to: "on"
+    actions:
+      - action: notify.alert_email
+        data:
+          title: "Cabinet sensor tamper"
+          message: >-
+            Tamper detected on {{ trigger.to_state.name }} —
+            {{ now().strftime('%b %-d, %-I:%M %p') }}.
+      - action: notify.alert_sms
+        data:
+          message: >-
+            HubWise Ops Alert: Tamper detected on facility sensor
+            '{{ trigger.to_state.name }}' —
+            {{ now().strftime('%b %-d, %-I:%M %p') }}.
+            Reply HELP for help or STOP to opt out.
+          target:
+            - !secret alert_sms_scott
+            - !secret alert_sms_wife
