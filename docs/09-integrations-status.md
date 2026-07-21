@@ -1,7 +1,7 @@
 # 09 — Integrations Status (living doc)
 
 Snapshot of what's actually running on the box. Update as integrations are
-added. Last updated: **2026-07-18**.
+added. Last updated: **2026-07-21**.
 
 ## Platform state
 
@@ -71,10 +71,10 @@ symlinks) · Git pull · Tailscale · Terminal & SSH.
 | iBeacon Tracker | 4 | |
 | HP LaserJet (IPP) | 1 | printer status |
 | LG webOS TV (`webostv`) | 1 | 2025 OLED65 C5 @ 172.16.105.143 → device "Great Room TV", **Living Room** area (area renamed from Great Room 2026-07-14; TV device name left as-is). Full power/vol/app control. (Also still visible via Google Cast) |
-| Plex Media Server (`plex`) | 1 server | "WilsonMedia" PMS on a PC @ **172.16.105.180** (libraries on Synology NAS01 @ .100). Local; linked via plex.tv (account has a 2nd shared server "JAKES-PC" — not added). `sensor.wilsonmedia` = active streams; per-client `media_player` entities appear dynamically when Plex clients play (or via "Scan clients"). Server device left unassigned (infra) |
+| Plex Media Server (`plex`) | 1 server | "WilsonMedia" PMS on a PC @ **172.16.105.180** (libraries on Synology NAS01 @ .100). Local; linked via plex.tv (account has a 2nd shared server "JAKES-PC" — not added). `sensor.wilsonmedia` = active streams; per-client `media_player` entities appear dynamically when Plex clients play (or via "Scan clients"). Server device left unassigned (infra). ⚠️ **HA depends on that PC being on with PMS running** — if it's off the entry hangs at `plex_server.connect` → `setup_error`/`setup_in_progress` (happened 2026-07-19; PMS was simply not running). PMS now set to **auto-start on Windows** (Startup-folder shortcut + auto-login via `netplwiz`). Recovery: start PMS, then reload the config entry (no reconfig needed if IP unchanged) |
 | QNAP (TS-653A) | 1 (+36 disabled) | NAS monitoring, admin acct, host:8080 SSL off → Utility Room area. NAS self-reports "warning" status — check QTS |
 | QHM-1134 LED BLE | 1 | RGB/W controller (`led_ble`) |
-| Blink | 6 | cloud; cams Back/Front Yard, Living Room, Basement, Camper + sync module. Camper out of scope |
+| ~~Blink~~ | 0 (was 6) | ⚠️ **BROKEN — entry removed 2026-07-19.** Upstream OAuth v2 break (HA `blink` vs `blinkpy` 0.25.x); auth fails despite valid creds. Parked pending upstream fix — see Blink note below |
 | Tuya / Smart Life | 11 | cloud; user-code flow. Mostly outdoor plugs/switches (see area notes) |
 | Google Nest | 2 (6 entities) | Family Room thermostat → Living Room; Garage camera → Garage. SDM + Pub/Sub events enabled. See setup notes below |
 | Vivint (HACS: `natekspencer/ha-vivint`) | 13 active (of 17; 4 disabled) | cloud; user/pass + MFA. **Read-only posture** (pro-monitored). Alarm panel, 2 Kwikset locks, door/window + glass-break + motion sensors, cameras. Garage (×3) + duplicate Nest disabled — see Vivint notes below. Vivint pre-mapped some to Areas |
@@ -150,6 +150,37 @@ symlinks) · Git pull · Tailscale · Terminal & SSH.
 - **To revisit later:** check for a newer ha-wyzeapi release / recent issues mentioning HAOS
   or Python 3.14; ground-truth the chain with `openssl s_client -showcerts api.wyzecam.com:443`
   from the **Core** container; cameras would need a separate `docker-wyze-bridge` regardless.
+
+### Blink note (BROKEN — upstream OAuth v2 break, config entry REMOVED 2026-07-19)
+- **Was working** at setup (~2026-07-10); **stopped authenticating ~2026-07-14.** All 12
+  entities went `unavailable`; config entry stuck in `setup_retry`.
+- **Root cause = upstream, not our config or credentials** (website login works fine). In
+  **Nov 2025 Blink switched their API to OAuth 2.0 + PKCE**; `blinkpy` 0.25.x implements it
+  but the **HA `blink` integration wasn't updated to match**, and `blinkpy` changed device
+  identity from `device_id`→`hardware_id` so stored entries have no `hardware_id` → a new
+  random UUID is generated each run → **token refresh always fails**. Debug log confirmed:
+  `blinkpy.auth: Attempting OAuth v2 token refresh` → `Attempting OAuth v2 login flow` →
+  `OAuth authorization request failed` (fails in ~45 ms, every 40/80 s forever). The retry
+  loop also **keeps the account throttled**, and a related bug **drops the session cookie
+  during 2FA** so even a fresh add that reaches the PIN screen fails ("Invalid Authentication").
+  Non-Amazon-linked accounts especially affected.
+  - Tracking: [core #158760](https://github.com/home-assistant/core/issues/158760) (integration
+    incompatible w/ blinkpy 0.25.x), [core #168029](https://github.com/home-assistant/core/issues/168029),
+    [blinkpy #1217](https://github.com/fronzbot/blinkpy/issues/1217),
+    [blinkpy #1230](https://github.com/fronzbot/blinkpy/issues/1230) (SMS code sent, PIN never verifies).
+- **What we tried (2026-07-19, via HA REST/WS API from the LAN):** disabled to stop the loop
+  → waited out throttle → re-enabled → restart to force a debug-logged attempt (confirmed the
+  OAuth v2 failure) → **deleted the entry** and did a clean fresh add → still "Invalid
+  Authentication". Core/OS/Supervisor all fully up to date (2026.7.2 / 18.1 / 2026.07.3), so
+  no HA-side fix available yet.
+- **Config entry deleted** (clean slate — avoids the background retry loop re-throttling the
+  account). HA is on **core 2026.7.2**; a fix ships upstream via a future core update.
+- **To revisit / re-add when fixed:** watch the tracking issues + HA release notes for a
+  `blink`/`blinkpy` OAuth-v2 fix. Then **Settings → Devices & Services → Add Integration →
+  Blink** → email/password → fresh 2FA PIN (newest code, <60 s, no spaces). **Device→area
+  map to restore after re-add** (captured before delete): Front Yard→**Front Yard**, Back
+  Yard→**Back Yard**, Living Room→**Living Room**, blink Home (sync module)→**Rec Room**,
+  Basement→**Rec Room**, Camper→unassigned (out of scope).
 
 ### Govee (full ecosystem) note (WORKING via API-key mode, 2026-07-15)
 - Full Govee account now in HA via **govee2mqtt** (`wez/govee2mqtt`, add-on **v2026.03.25**),
@@ -256,6 +287,65 @@ control.
 - Note: **Assist** (local voice) still auto-exposes (75 entities) — local only, left as-is;
   trim later if desired.
 
+## Garage-open overnight alert — done 2026-07-20
+
+**Goal:** email Scott if either garage's contact sensor is left open 10+ continuous minutes
+between 22:00–05:00 America/Chicago, plus an all-clear when it closes. Design spec:
+[docs/superpowers/specs/2026-07-19-garage-open-alert-design.md](superpowers/specs/2026-07-19-garage-open-alert-design.md);
+implementation plan: [docs/superpowers/plans/2026-07-20-garage-open-alert.md](superpowers/plans/2026-07-20-garage-open-alert.md).
+
+- **Package:** `packages/garage_alerts.yaml` — 2 `input_boolean` flags (re-alert guards), a
+  new `notify.garage_alert_email` (SMTP2GO, distinct name so it won't collide with the future
+  cabinet-alert notifier), and 4 explicit automations (open-too-long + all-clear, per door).
+- **Sensors used:** `binary_sensor.0xffffb40e0601d430_contact` (Dad) and
+  `binary_sensor.mom_garage_sensor_contact` (Mom) — Zigbee contact sensors; no `cover.*`
+  entity exists (MyQ has no cloud path — see "Garage doors" note above), so this is
+  detection-only, no opener control.
+- **Two real bugs caught before merge, not just spec-follow:** (1) `secrets.yaml.example` was
+  missing the `smtp2go_username`/`smtp2go_password`/`alert_sender`/`alert_email_scott` keys
+  the spec assumed already existed — added, or CI's `cp secrets.yaml.example secrets.yaml`
+  step would have failed the config check. (2) First draft templated the alert timestamp off
+  raw `last_changed` (UTC) — would have silently shown UTC wall-clock instead of
+  America/Chicago in every email. Fixed to `as_local(trigger.to_state.last_changed)`.
+- **SMTP2GO relay settings** (`mail.smtp2go.com:587`, STARTTLS) are SMTP2GO's published
+  defaults — not recorded anywhere else in this repo/box, used because no prior `notify:`
+  block existed to copy from. Confirmed working via live test send.
+- ✅ **Verified live 2026-07-20** via HA Developer Tools (Chrome deviceId
+  `f2925e1f-bf50-4691-9065-d5216b8cc3e1`, same one used for HA/Twilio work): all 4
+  `automation.garage_*` + 2 `input_boolean.garage_*_alerted` entities present and enabled;
+  rendered the Jinja timestamp template live (`23:01:57 UTC` → correctly showed `6:01 PM
+  CDT`); called `notify.garage_alert_email` with a real test message — **email received by
+  Scott, confirming SMTP2GO delivery end-to-end.**
+- **SMS deferred:** each action block has a `# TODO(TFV)` marker — add a `notify.alert_sms`
+  action once Twilio toll-free verification is approved (see "Cabinet alerting" below); reuse
+  its Twilio notifier, do not declare a second `twilio:` key.
+- Delivered via PR [#2](https://github.com/scottfywil/homeassistant/pull/2) → CI green
+  (yamllint, HA config check, ESPHome config check) → merged to `main` → GitOps deploy.
+
+## Prusa Lamp print-activity automation — done 2026-07-21
+
+**Goal:** the Workout Room "Prusa Lamp" turns ON while *either* 3D printer is printing and
+OFF when *neither* has an active job.
+
+- **Package:** `packages/workout_prusa_lamp.yaml` — one automation
+  (`automation.workout_prusa_lamp_follow`, `mode: restart`). Triggers on any state change of
+  the two OctoPrint "Printing" binary sensors **and** on `homeassistant` start, then a
+  `choose` re-evaluates both (`condition: state … match: any`, state `on`) → `light.turn_on`,
+  else `light.turn_off`. The start trigger makes it self-correct after a reboot mid-print.
+- **Entities verified live via the HA registry 2026-07-21** (my first-draft guesses were all
+  wrong — same lesson as the cabinet package, so I confirmed before merge):
+  - `binary_sensor.octoprint_printing` — Prusa Mini "Printing"
+  - `binary_sensor.octoprint_printing_2` — Prusa MK3S+ "Printing" (2 OctoPrint entries
+    disambiguate as `…` / `…_2`, order per config-entry setup, **not** friendly name)
+  - `light.0x7cb03eaa00a41f59` — Prusa Lamp (Zigbee bulb; IEEE-based entity_id, like the
+    cabinet contacts)
+- **Known behavior:** OctoPrint's "Printing" binary sensor is **off while a job is paused**,
+  so a paused print currently switches the lamp off. To keep it on through pauses, key off
+  `sensor.octoprint_current_state` (+ `_2`) with state in printing/pausing/paused/resuming
+  instead. Left as-is per current scope; revisit if pauses become annoying.
+- Delivered via PR [#3](https://github.com/scottfywil/homeassistant/pull/3) → CI green
+  (yamllint, HA config check, ESPHome config check) → squash-merged to `main` → GitOps deploy.
+
 ## Cabinet alerting — TFV SUBMITTED, awaiting Twilio approval (updated 2026-07-18)
 
 **Goal:** notify Scott + wife whenever the liquor/bar cabinets open, AND double the toll-free
@@ -347,6 +437,12 @@ still needs the REAL values in `/config/secrets.yaml` before merge: `smtp2go_use
 `smtp2go_password`, `alert_sender`, `alert_email_scott`, `alert_email_wife`,
 `twilio_account_sid`, `twilio_auth_token`, `twilio_from_number` (+18776005343),
 `alert_sms_scott`, `alert_sms_wife`.
+- ✅ All 10 keys are now real on the box (see checklist step 6 below). The SMTP2GO relay
+  settings match the garage-alert package's proven-working ones (`mail.smtp2go.com:587`
+  STARTTLS, confirmed by a real delivered test email). Naming reconciled with
+  `packages/garage_alerts.yaml`: the cabinet package uses its **own distinct**
+  `notify.alert_email` / `notify.alert_sms` (garage keeps `notify.garage_alert_email`),
+  and only the cabinet package declares the global `twilio:` key — no duplicates.
 
 **Resume checklist:** (1) HubWise business profile Approved ✅ → (2) SMS policy page live +
 publicly verified ✅ → (3) toll-free verification submitted ✅ 2026-07-18 → (4) **TFV approved
@@ -458,4 +554,5 @@ Start by reading docs/09, then confirm Twilio's current console state before act
 ## Not yet started
 
 - ESP32 presence sensors — parts not yet ordered ([08-presence-sensors.md](08-presence-sensors.md)).
-- Automations in `packages/` beyond the starter office-lighting example.
+- More `packages/` automations. Live so far: office-lighting (starter), `garage_alerts.yaml`,
+  `workout_prusa_lamp.yaml`. Staged (gated on Twilio TFV): `cabinet_alerts.yaml` (PR #1).

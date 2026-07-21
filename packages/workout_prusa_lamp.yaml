@@ -1,0 +1,43 @@
+# Prusa Lamp follows print activity (Workout Room).
+# Lamp ON while EITHER printer is printing; OFF when NEITHER has an active job.
+# Also re-evaluates on Home Assistant start so the lamp self-corrects after a
+# reboot mid-print.
+#
+# Entity IDs verified live via the HA registry 2026-07-21:
+#   Prusa Mini  printing : binary_sensor.octoprint_printing     (Workout Room)
+#   Prusa MK3S+ printing : binary_sensor.octoprint_printing_2   (Workout Room)
+#   Prusa Lamp           : light.0x7cb03eaa00a41f59  (Zigbee bulb; IEEE-based ID)
+# The two OctoPrint instances disambiguate as *_printing / *_printing_2 (order
+# is per config-entry setup, NOT friendly name — confirmed against the devices).
+#
+# Note: OctoPrint's "Printing" binary_sensor is OFF while a job is paused. If a
+# paused job should also keep the lamp on, key off sensor.octoprint_current_state
+# (+ _2) instead, with state in [printing, pausing, paused, resuming].
+automation:
+  - alias: "Workout - Prusa Lamp follows print jobs"
+    id: workout_prusa_lamp_follow
+    mode: restart
+    triggers:
+      - trigger: state
+        entity_id:
+          - binary_sensor.octoprint_printing
+          - binary_sensor.octoprint_printing_2
+      - trigger: homeassistant
+        event: start
+    actions:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id:
+                  - binary_sensor.octoprint_printing
+                  - binary_sensor.octoprint_printing_2
+                match: any
+                state: "on"
+            sequence:
+              - action: light.turn_on
+                target:
+                  entity_id: light.0x7cb03eaa00a41f59
+        default:
+          - action: light.turn_off
+            target:
+              entity_id: light.0x7cb03eaa00a41f59
