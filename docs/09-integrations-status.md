@@ -1,7 +1,7 @@
 # 09 — Integrations Status (living doc)
 
 Snapshot of what's actually running on the box. Update as integrations are
-added. Last updated: **2026-07-21**.
+added. Last updated: **2026-07-25**.
 
 ## Platform state
 
@@ -346,7 +346,7 @@ OFF when *neither* has an active job.
 - Delivered via PR [#3](https://github.com/scottfywil/homeassistant/pull/3) → CI green
   (yamllint, HA config check, ESPHome config check) → squash-merged to `main` → GitOps deploy.
 
-## Cabinet alerting — TFV SUBMITTED, awaiting Twilio approval (updated 2026-07-18)
+## Cabinet alerting — TFV REJECTED (30513), fixing + resubmitting (updated 2026-07-25)
 
 **Goal:** notify Scott + wife whenever the liquor/bar cabinets open, AND double the toll-free
 number as a **HubWise customer-care/outage-notification tool**. Channels: **email
@@ -376,6 +376,46 @@ opt out."; age-gated = No; additional info = consent-via-MSA summary + policy UR
 **Approval typically takes days. While waiting:** pair/verify the 3 cabinet sensors in Z2M
 and put the real secrets into `/config/secrets.yaml` on the box — both are
 approval-independent.
+
+### ❌ TFV REJECTED 2026-07-24 — reason 30513 (opt-in/consent insufficient), now being fixed
+- **What Twilio said:** `30513` — "Opt-in not sufficient / language unclear. Consent for
+  messaging is a requirement for service." 7-day **prioritized-resubmit window** from the
+  rejection (edit the existing request; don't start a new one).
+- **Root cause:** the submission described consent only as "signed MSA" and the consent text
+  lived *inside* the policy page's T&C/Privacy prose. Twilio 30513 requires opt-in language
+  that (a) explicitly says "SMS/text messages", (b) is **separate** from T&C/Privacy, (c)
+  states what messages are sent, and (d) is backed by a **public URL/image showing the exact
+  consent text the recipient agrees to**. (Refs: twilio.com/docs/api/errors/30513.)
+- **Decision (user, 2026-07-25):** keep the **broad** HubWise-client use case (not narrow to
+  household), so the fix is to make MSA-based consent explicit + demonstrable.
+- **The fix (built 2026-07-25):** a standalone opt-in artifact was added to the top of the
+  policy page's Section 3 — a bordered box showing the verbatim, **non-pre-checked**
+  statement: *"☐ SMS/Text Consent. I agree to receive service and operational text messages
+  (SMS) from HubWise Technology at the mobile number(s) I provide — incident/outage alerts,
+  ticket and service updates, and operational notifications. Message frequency varies. Message
+  & data rates may apply. Reply STOP to opt out, HELP for help."* Rendered inline (no separate
+  image needed); anchored at `#consent`.
+- **Resubmit fields:** opt-in documentation URL → `https://SMSPolicy.hubwisetech.net/#consent`;
+  opt-in description → the explicit "consent via a dedicated, non-pre-checked SMS-consent line
+  in the MSA/onboarding form" paragraph; leave use case (Customer Care), samples, volume, and
+  T&C/Privacy URLs unchanged.
+
+### 📦 Policy page now Git-backed — repo `hubwisetech/hubwise-sms-policy` (2026-07-25)
+- The SMS policy page previously lived only on **Cloudflare Pages via dashboard upload** (no
+  source control). To make it editable + reviewable, a repo **`hubwisetech/hubwise-sms-policy`**
+  (private) was created; it holds `index.html` (the full page + the new opt-in artifact,
+  self-contained: inlined fonts + an optimized ~14 KB logo, ~120 KB total).
+- **Deploy model (to set up):** connect a **Cloudflare Pages** project to that repo (prod
+  branch `main`, no build command, output `/`) and move the `SMSPolicy.hubwisetech.net`
+  custom domain onto it, replacing the direct-upload deployment. Then push-to-`main` deploys.
+- ⚠️ **Cross-session push boundary:** the repo is under the **`hubwisetech` org**, but Claude
+  Code sessions scoped to *this* (`scottfywil/homeassistant`) repo **cannot push to it** —
+  git-proxy has no creds for it and the GitHub-API write is policy-denied. To edit the page
+  with Claude, **start a session with `hubwisetech/hubwise-sms-policy` as its source** (that
+  session's git proxy is scoped to it). The finished `index.html` was delivered to the user to
+  seed the repo (web upload) in the meantime.
+- **Browser-gated steps** (Cloudflare Pages connect + Twilio console resubmit) need a local
+  `claude --chrome` session; this cloud session has no browser tools.
 
 **Also this session (2026-07-18):** TFV answers finalized (pack below, ready to paste);
 `packages/cabinet_alerts.yaml` pre-staged on branch `claude/homeassistant-twilio-sms-c2pztc`
@@ -445,9 +485,12 @@ still needs the REAL values in `/config/secrets.yaml` before merge: `smtp2go_use
   and only the cabinet package declares the global `twilio:` key — no duplicates.
 
 **Resume checklist:** (1) HubWise business profile Approved ✅ → (2) SMS policy page live +
-publicly verified ✅ → (3) toll-free verification submitted ✅ 2026-07-18 → (4) **TFV approved
-⏳ (in review — check Twilio Console → Phone Numbers → Regulatory Compliance → Toll-Free
-Verification)** → (5) cabinet sensors verified ✅ — all six entities present, but ⚠️ **their
+publicly verified ✅ → (3) toll-free verification submitted ✅ 2026-07-18 → (3a) **TFV REJECTED
+❌ 2026-07-24 (reason 30513 — opt-in/consent); fix built, RESUBMIT pending** → seed
+`hubwisetech/hubwise-sms-policy` with the updated `index.html`, point Cloudflare Pages at it,
+then edit + resubmit the TFV (opt-in doc URL → `.../#consent`). See the "TFV REJECTED" +
+"Policy page now Git-backed" subsections above. → (4) **TFV approved ⏳ (check Twilio Console →
+Phone Numbers → Regulatory Compliance → Toll-Free Verification)** → (5) cabinet sensors verified ✅ — all six entities present, but ⚠️ **their
 actual entity IDs are the Z2M IEEE-address defaults, NOT the friendly-name slugs** (corrected
 via live HA API 2026-07-19; the earlier "exact IDs the package expects" claim was wrong — the
 nice names are HA `name_by_user` device overrides applied post-discovery, which change
