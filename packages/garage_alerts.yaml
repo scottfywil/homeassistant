@@ -1,19 +1,12 @@
 # Garage-open overnight alert. Email only for now; SMS drops in once Twilio
 # TFV is approved (see docs/09-integrations-status.md, "Cabinet alerting").
-# Distinct notifier name (garage_alert_email) so it won't collide with the
-# cabinet package's notifier when that later merges.
-notify:
-  - name: garage_alert_email
-    platform: smtp
-    sender: !secret alert_sender
-    recipient:
-      - !secret alert_email_scott
-    server: mail.smtp2go.com
-    port: 587
-    username: !secret smtp2go_username
-    password: !secret smtp2go_password
-    encryption: starttls
-
+#
+# The SMTP notifier is NO LONGER declared here. YAML `notify: platform: smtp`
+# is removed in HA 2027.1; HA auto-imported the old block into a UI config
+# entry ("garage_alert_email", Settings → Devices & Services → SMTP), which is
+# now the only place the SMTP2GO credentials live. Alerts call the entity
+# notify.garage_alert_email_swilson_hubwisetech_com via notify.send_message.
+# Do NOT re-add a YAML smtp notifier here or in the future cabinet package.
 input_boolean:
   garage_dad_alerted:
     name: Garage Dad Alerted
@@ -35,7 +28,9 @@ automation:
         after: "22:00:00"
         before: "05:00:00"
     actions:
-      - action: notify.garage_alert_email
+      - action: notify.send_message
+        target:
+          entity_id: notify.garage_alert_email_swilson_hubwisetech_com
         data:
           title: "Garage Alert"
           message: >-
@@ -60,7 +55,9 @@ automation:
         entity_id: input_boolean.garage_dad_alerted
         state: "on"
     actions:
-      - action: notify.garage_alert_email
+      - action: notify.send_message
+        target:
+          entity_id: notify.garage_alert_email_swilson_hubwisetech_com
         data:
           title: "Garage Alert - All Clear"
           message: "Dad garage door is now closed."
@@ -81,7 +78,9 @@ automation:
         after: "22:00:00"
         before: "05:00:00"
     actions:
-      - action: notify.garage_alert_email
+      - action: notify.send_message
+        target:
+          entity_id: notify.garage_alert_email_swilson_hubwisetech_com
         data:
           title: "Garage Alert"
           message: >-
@@ -106,7 +105,9 @@ automation:
         entity_id: input_boolean.garage_mom_alerted
         state: "on"
     actions:
-      - action: notify.garage_alert_email
+      - action: notify.send_message
+        target:
+          entity_id: notify.garage_alert_email_swilson_hubwisetech_com
         data:
           title: "Garage Alert - All Clear"
           message: "Mom garage door is now closed."

@@ -321,6 +321,28 @@ implementation plan: [docs/superpowers/plans/2026-07-20-garage-open-alert.md](su
   its Twilio notifier, do not declare a second `twilio:` key.
 - Delivered via PR [#2](https://github.com/scottfywil/homeassistant/pull/2) → CI green
   (yamllint, HA config check, ESPHome config check) → merged to `main` → GitOps deploy.
+- ⚠️ **SMTP moved out of YAML — 2026-07-26.** HA raised a repair: YAML `notify: platform: smtp`
+  is removed in **2027.1**, and HA had already auto-imported the block into a **UI config entry**
+  (Settings → Devices & Services → **SMTP**, entry title `garage_alert_email`,
+  id `01KY0W5XKTB4195ZKTEF4K5GGE`). The YAML `notify:` block was deleted from
+  `packages/garage_alerts.yaml` and the four call sites now use
+  `notify.send_message` targeting entity **`notify.garage_alert_email_swilson_hubwisetech_com`**
+  (HA derived that entity_id from the imported entry).
+  **Consequences to know:**
+  - The SMTP2GO credentials now live **only in the box's `.storage`**, not in this repo.
+    A rebuild from `main` + `secrets.yaml` alone will come up with **no working email** until
+    the SMTP integration is re-added through the UI.
+  - `smtp2go_username` / `smtp2go_password` / `alert_sender` stay in `secrets.yaml.example` as
+    documentation of what the box needs — they are no longer referenced by any YAML.
+  - **Do not delete the SMTP config entry** — it is load-bearing.
+  - The legacy `notify.garage_alert_email` **service still exists after the YAML removal** — the
+    imported config entry registers it. So the `notify.` namespace now holds both that service
+    and the entity. **Do not rename the entity to `garage_alert_email`** — it would collide.
+  - ✅ **Verified live 2026-07-26** after the Git Pull deploy + core restart: Repairs page shows
+    "no repairs pending" (the SMTP warning cleared), all 4 `automation.garage_*` loaded and on,
+    and a real `notify.send_message` to the entity returned OK with the entity timestamp
+    advancing — SMTP2GO accepted the message. Delivered via
+    PR [#7](https://github.com/scottfywil/homeassistant/pull/7).
 
 ## Prusa Lamp print-activity automation — done 2026-07-21
 
@@ -477,12 +499,23 @@ still needs the REAL values in `/config/secrets.yaml` before merge: `smtp2go_use
 `smtp2go_password`, `alert_sender`, `alert_email_scott`, `alert_email_wife`,
 `twilio_account_sid`, `twilio_auth_token`, `twilio_from_number` (+18776005343),
 `alert_sms_scott`, `alert_sms_wife`.
-- ✅ All 10 keys are now real on the box (see checklist step 6 below). The SMTP2GO relay
-  settings match the garage-alert package's proven-working ones (`mail.smtp2go.com:587`
-  STARTTLS, confirmed by a real delivered test email). Naming reconciled with
-  `packages/garage_alerts.yaml`: the cabinet package uses its **own distinct**
-  `notify.alert_email` / `notify.alert_sms` (garage keeps `notify.garage_alert_email`),
-  and only the cabinet package declares the global `twilio:` key — no duplicates.
+- ⚠️ **Email side changed 2026-07-26 — do NOT write a `notify: platform: smtp` block for this
+  package.** YAML SMTP is removed in HA 2027.1; SMTP now lives in a **UI config entry** (see
+  the SMTP-moved-out-of-YAML note under "Garage-open overnight alert"). Cabinet alerts should
+  call `notify.send_message` targeting the existing entity
+  `notify.garage_alert_email_swilson_hubwisetech_com`, **or** — if a separate sender/recipient
+  set is wanted — add a **second SMTP config entry through the UI** (Settings → Devices &
+  Services → Add integration → SMTP) and target that entity. Nothing SMTP-related is declared
+  in YAML anymore. ⚠️ **`packages/cabinet_alerts.yaml` still contains the old
+  `notify: platform: smtp` block, so it must be reworked to this UI / `notify.send_message`
+  model before it can merge — a follow-up independent of TFV approval.**
+- Because of that, the SMTP `!secret` keys are no longer needed for this package: only
+  `alert_email_wife` (as a recipient typed into the UI entry, not a secret) and the five
+  Twilio secrets remain outstanding. `smtp2go_username`/`smtp2go_password`/`alert_sender`/
+  `alert_email_scott` are already stored in the SMTP config entry and proven working
+  (`mail.smtp2go.com:587` STARTTLS, real delivered test email).
+- Twilio side unchanged: the cabinet package declares the global `twilio:` key (garage does
+  not) and sends SMS via `notify.alert_sms` (from +18776005343); no duplicate `twilio:` keys.
 
 **Resume checklist:** (1) HubWise business profile Approved ✅ → (2) SMS policy page live +
 publicly verified ✅ → (3) toll-free verification submitted ✅ 2026-07-18 → (3a) **TFV REJECTED
