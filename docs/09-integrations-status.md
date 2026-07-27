@@ -335,6 +335,14 @@ implementation plan: [docs/superpowers/plans/2026-07-20-garage-open-alert.md](su
   - `smtp2go_username` / `smtp2go_password` / `alert_sender` stay in `secrets.yaml.example` as
     documentation of what the box needs — they are no longer referenced by any YAML.
   - **Do not delete the SMTP config entry** — it is load-bearing.
+  - The legacy `notify.garage_alert_email` **service still exists after the YAML removal** — the
+    imported config entry registers it. So the `notify.` namespace now holds both that service
+    and the entity. **Do not rename the entity to `garage_alert_email`** — it would collide.
+  - ✅ **Verified live 2026-07-26** after the Git Pull deploy + core restart: Repairs page shows
+    "no repairs pending" (the SMTP warning cleared), all 4 `automation.garage_*` loaded and on,
+    and a real `notify.send_message` to the entity returned OK with the entity timestamp
+    advancing — SMTP2GO accepted the message. Delivered via
+    PR [#7](https://github.com/scottfywil/homeassistant/pull/7).
 
 ## Prusa Lamp print-activity automation — done 2026-07-21
 
