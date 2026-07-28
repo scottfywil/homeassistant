@@ -399,7 +399,26 @@ opt out."; age-gated = No; additional info = consent-via-MSA summary + policy UR
 and put the real secrets into `/config/secrets.yaml` on the box — both are
 approval-independent.
 
-### ❌ TFV REJECTED 2026-07-24 — reason 30513 (opt-in/consent insufficient), now being fixed
+### ❌❌ TFV REJECTED AGAIN ~2026-07-28 — 30498 + 30475: the MSA-consent model itself is disallowed
+- **Second rejection** (Request SID `HHd1ae8477c43c4872175bc9ce91f5aa16`), two reason codes:
+  - **30475 — "Consent for Messaging Cannot Be Part of Other Agreements":** SMS consent may
+    NOT be a clause/checkbox inside ANY broader agreement (MSA, ToS, contract), even
+    non-pre-checked. Consent must be a **distinct, optional, standalone opt-in step**;
+    consumers must be able to use the service without agreeing to texts. → The entire
+    "consent line in the MSA" approach (including the strengthened artifact from the first
+    fix) is structurally disallowed — not a wording problem.
+  - **30498 — "Opt-In Workflow Must Match the Submission Details":** the described workflow
+    (paper/MSA signature) didn't match the hosted evidence (a policy page showing sample
+    language). Evidence must SHOW the exact registered mechanism.
+- **Consequence:** the opt-in MECHANISM must change. Options weighed: (1) real **web opt-in
+  form** at SMSPolicy.hubwisetech.net/optin — name/company/mobile + unchecked consent
+  checkbox; register opt-in type = Web form with the live form as evidence (description ==
+  evidence by construction; fixes both codes) — **recommended**; (2) standalone one-page
+  paper consent form (separate from MSA) + hosted blank-form image; (3) keyword opt-in
+  (can't proactively text → poor fit). **Decision pending user.**
+- New 7-day prioritized-resubmit window from ~2026-07-28.
+
+### ❌ TFV REJECTED 2026-07-24 — reason 30513 (opt-in/consent insufficient) — fix superseded by 30475 above
 - **What Twilio said:** `30513` — "Opt-in not sufficient / language unclear. Consent for
   messaging is a requirement for service." 7-day **prioritized-resubmit window** from the
   rejection (edit the existing request; don't start a new one).
