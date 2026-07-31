@@ -1,7 +1,7 @@
 # 09 — Integrations Status (living doc)
 
 Snapshot of what's actually running on the box. Update as integrations are
-added. Last updated: **2026-07-21**.
+added. Last updated: **2026-07-25**.
 
 ## Platform state
 
@@ -368,19 +368,171 @@ OFF when *neither* has an active job.
 - Delivered via PR [#3](https://github.com/scottfywil/homeassistant/pull/3) → CI green
   (yamllint, HA config check, ESPHome config check) → squash-merged to `main` → GitOps deploy.
 
-## Cabinet alerting — IN PROGRESS, on hold for SMS policy page (updated 2026-07-17)
+## Cabinet alerting — ✅ TFV APPROVED 2026-07-30 (updated 2026-07-30)
 
 **Goal:** notify Scott + wife whenever the liquor/bar cabinets open, AND double the toll-free
 number as a **HubWise customer-care/outage-notification tool**. Channels: **email
 (SMTP2GO, ready)** + **SMS (Twilio)**. Companion-app push was declined by user.
 
-**Latest status (2026-07-17):** HubWise **Business** compliance profile is **Approved** (the
+### ✅✅ TFV APPROVED 2026-07-30 — attempt 3 (standalone web opt-in form) worked
+
+- **Request** `HHd1ae8477c43c4872175bc9ce91f5aa16` (**edited**, never recreated, so the
+  prioritized queue was preserved), number `+18776005343`,
+  PN SID `PN1cb92ab681d5b4ce6e7f026a0970a344`, business "Hubwise Technology, Inc."
+  Resubmitted 2026-07-28, **Approved** by 2026-07-30 (~2 days).
+- **What actually fixed it:** consent was moved *out of the MSA entirely* onto a real
+  standalone web form at **https://SMSPolicy.hubwisetech.net/optin**. Because that form is
+  simultaneously the registered mechanism *and* the hosted evidence, 30475 (consent cannot
+  live inside another agreement) and 30498 (workflow must match the evidence) were resolved
+  **by construction rather than by rewording** — which is why attempts 1 and 2 both failed:
+  they kept re-wording an MSA clause that was structurally disallowed.
+- **Registered values** (Twilio console → Trust Hub → Registrations → Toll-free):
+  opt-in type **Web Form**; proof-of-consent URL `https://SMSPolicy.hubwisetech.net/optin`;
+  use case Customer Care; volume 1,000/mo; T&C + Privacy both
+  `https://SMSPolicy.hubwisetech.net/`; age-gated No; the 3 message samples unchanged.
+- ⚠️ **The "Additional information" field is capped at 500 characters.** The intended
+  621-char opt-in description would not save (submit stayed disabled with a "Limit to 500
+  characters" error). The registered 494-char text is recorded verbatim in
+  `hubwisetech/hubwise-sms-policy` → `PLAN.md`. If it is ever edited, keep it under 500 and
+  **keep the "optional, separate from any agreement, not a condition of service" clause —
+  that clause is the 30475 fix.**
+- **The `/optin` form is now load-bearing compliance infrastructure.** It is the only
+  sanctioned way a number enters this SMS program, and each submission email to
+  `hwadmin@hubwisetech.com` is the retained consent record. If `POST /api/optin` breaks,
+  consent silently stops being recorded while the form still appears to submit. The
+  `SMTP2GO_API_KEY` lives only in the Cloudflare Worker's settings, so a Worker rebuild from
+  that repo alone comes up unable to record consent until the secret is re-added.
+- Policy-page repo work: commits `45cc453` (mechanism change), `b2f0f76` (deleted the stale
+  `HANDOFF.md`, which still described the disallowed MSA-consent model as "the fix"),
+  `2d3d958` (approval recorded).
+
+### Email side moved off YAML SMTP — 2026-07-30
+
+- `packages/cabinet_alerts.yaml` never shipped a `notify: platform: smtp` block to `main`.
+  It was reworked *before* merge to the same UI-config-entry model the garage package already
+  uses (YAML SMTP is removed in HA **2027.1**).
+- **The SMTP integration separates the service from its recipients.** One service
+  (`garage_alert_email`, id `01KY0W5XKTB4195ZKTEF4K5GGE`, holds the SMTP2GO credentials) with
+  **one notify entity per recipient sub-entry**. Verified live on the box 2026-07-30:
+
+  | Entity | Recipient | Added |
+  | --- | --- | --- |
+  | `notify.garage_alert_email_swilson_hubwisetech_com` | Scott | 2026-07-26 (auto-import) |
+  | `notify.garage_alert_email_megan` | Megan (address is in the config entry, not this repo) | 2026-07-30 |
+
+  Megan was added via **Add recipient** on the existing service, deliberately *not* as a new
+  service: no SMTP2GO credentials had to be re-entered, and the garage automations were
+  unaffected because they target the `swilson` entity by name. Setting the recipient **Name**
+  to "Megan" is why the entity is the readable `..._megan` rather than a slugified address.
+- The service keeps the name `garage_alert_email` even though it now serves cabinet alerts
+  too. **Do not rename it** — HA derives entity_ids from it, so renaming would break the four
+  live garage automations. Cosmetic wart, accepted deliberately.
+- Consequence: `alert_email_scott` / `alert_email_wife` in `secrets.yaml.example` are now
+  **documentation only** — no YAML references them, the same as `smtp2go_username` /
+  `smtp2go_password` / `alert_sender` after the garage migration.
+- `notify: platform: twilio_sms` **stays in YAML** — the 2027.1 removal applies to
+  `platform: smtp` only, so `notify.alert_sms` is unaffected.
+- ⚠️ **Still blocking the merge:** the real Twilio values must be in `/config/secrets.yaml`
+  on the box — `twilio_account_sid`, `twilio_auth_token`, `twilio_from_number`,
+  `alert_sms_scott`, `alert_sms_wife`. CI passes against `secrets.yaml.example`, but GitOps
+  deploys `main` to the box and a missing `!secret` fails the config check mid-restart.
+
+### History — attempts 1 and 2 (superseded, kept for the record)
+
+Everything below this line predates the approval above. **The MSA-consent model it describes
+is structurally disallowed (30475) — do not follow any of it.** It is retained only to explain
+why the mechanism changed and to keep the rejection reasoning findable.
+
+**Latest status (2026-07-18):** HubWise **Business** compliance profile is **Approved** (the
 earlier Individual profile was rejected by TFV). Toll-free registration is mid-form; use case
 broadened to HubWise MSP service/outage notifications (Customer Care), consent via signed MSA
-(opt-in type = Paper form). **Blocked on:** building an SMS policy page (T&C + Privacy +
-Opt-In) to host at **https://SMSPolicy.hubwisetech.net** — Twilio needs that URL for the
-opt-in-documentation / T&C / privacy fields. Two handoff prompts for this are recorded at the
-end of this section.
+(opt-in type = Paper form). ✅ **SMS policy page LIVE + verified publicly (2026-07-18):**
+`smspolicy.hubwisetech.net` resolves (Cloudflare-proxied A records; an earlier NXDOMAIN that
+day was fixed by adding the DNS record — note stale negative DNS caches can linger ~30 min),
+serves HTTP 200 over HTTPS to all user agents (no Cloudflare challenge), and the content
+passes the TFV checklist: 3 labeled sections (T&C / Privacy / Opt-In Consent), MSA-based
+consent, "Message and data rates may apply", STOP/HELP, frequency-varies, CTIA no-sell/no-share
+statement, no unfilled placeholders (entity "HubWise Technology, Inc.", support
+(402) 339-7441 + hwadmin@hubwisetech.com, governing law Nebraska, effective 2026-07-18).
+**TFV is now UNBLOCKED — next step is pasting the pack below into the senders-onboarding
+form and submitting.**
+
+✅ **TFV SUBMITTED 2026-07-18** (user completed the senders-onboarding form manually, using
+the pack below). Extra "additional details" page answers, for the record: opt-in keywords +
+opt-in message left blank (paper-form/MSA opt-in, not keyword opt-in; defaults START/YES/
+UNSTOP apply); help message = "HubWise Technology: This number sends service and operational
+alerts to HubWise clients and staff. For assistance, reply HELP, email
+hwadmin@hubwisetech.com, or call (402) 339-7441. Msg & data rates may apply. Reply STOP to
+opt out."; age-gated = No; additional info = consent-via-MSA summary + policy URL.
+**Approval typically takes days. While waiting:** pair/verify the 3 cabinet sensors in Z2M
+and put the real secrets into `/config/secrets.yaml` on the box — both are
+approval-independent.
+
+### ❌❌ TFV REJECTED AGAIN ~2026-07-28 — 30498 + 30475: the MSA-consent model itself is disallowed
+- **Second rejection** (Request SID `HHd1ae8477c43c4872175bc9ce91f5aa16`), two reason codes:
+  - **30475 — "Consent for Messaging Cannot Be Part of Other Agreements":** SMS consent may
+    NOT be a clause/checkbox inside ANY broader agreement (MSA, ToS, contract), even
+    non-pre-checked. Consent must be a **distinct, optional, standalone opt-in step**;
+    consumers must be able to use the service without agreeing to texts. → The entire
+    "consent line in the MSA" approach (including the strengthened artifact from the first
+    fix) is structurally disallowed — not a wording problem.
+  - **30498 — "Opt-In Workflow Must Match the Submission Details":** the described workflow
+    (paper/MSA signature) didn't match the hosted evidence (a policy page showing sample
+    language). Evidence must SHOW the exact registered mechanism.
+- **Consequence:** the opt-in MECHANISM must change. Options weighed: (1) real **web opt-in
+  form** at SMSPolicy.hubwisetech.net/optin — name/company/mobile + unchecked consent
+  checkbox; register opt-in type = Web form with the live form as evidence (description ==
+  evidence by construction; fixes both codes) — **recommended**; (2) standalone one-page
+  paper consent form (separate from MSA) + hosted blank-form image; (3) keyword opt-in
+  (can't proactively text → poor fit). **Decision pending user.**
+- New 7-day prioritized-resubmit window from ~2026-07-28.
+
+### ❌ TFV REJECTED 2026-07-24 — reason 30513 (opt-in/consent insufficient) — fix superseded by 30475 above
+- **What Twilio said:** `30513` — "Opt-in not sufficient / language unclear. Consent for
+  messaging is a requirement for service." 7-day **prioritized-resubmit window** from the
+  rejection (edit the existing request; don't start a new one).
+- **Root cause:** the submission described consent only as "signed MSA" and the consent text
+  lived *inside* the policy page's T&C/Privacy prose. Twilio 30513 requires opt-in language
+  that (a) explicitly says "SMS/text messages", (b) is **separate** from T&C/Privacy, (c)
+  states what messages are sent, and (d) is backed by a **public URL/image showing the exact
+  consent text the recipient agrees to**. (Refs: twilio.com/docs/api/errors/30513.)
+- **Decision (user, 2026-07-25):** keep the **broad** HubWise-client use case (not narrow to
+  household), so the fix is to make MSA-based consent explicit + demonstrable.
+- **The fix (built 2026-07-25):** a standalone opt-in artifact was added to the top of the
+  policy page's Section 3 — a bordered box showing the verbatim, **non-pre-checked**
+  statement: *"☐ SMS/Text Consent. I agree to receive service and operational text messages
+  (SMS) from HubWise Technology at the mobile number(s) I provide — incident/outage alerts,
+  ticket and service updates, and operational notifications. Message frequency varies. Message
+  & data rates may apply. Reply STOP to opt out, HELP for help."* Rendered inline (no separate
+  image needed); anchored at `#consent`.
+- **Resubmit fields:** opt-in documentation URL → `https://SMSPolicy.hubwisetech.net/#consent`;
+  opt-in description → the explicit "consent via a dedicated, non-pre-checked SMS-consent line
+  in the MSA/onboarding form" paragraph; leave use case (Customer Care), samples, volume, and
+  T&C/Privacy URLs unchanged.
+
+### 📦 Policy page now Git-backed — repo `hubwisetech/hubwise-sms-policy` (2026-07-25)
+- The SMS policy page previously lived only on **Cloudflare Pages via dashboard upload** (no
+  source control). To make it editable + reviewable, a repo **`hubwisetech/hubwise-sms-policy`**
+  (private) was created; it holds `index.html` (the full page + the new opt-in artifact,
+  self-contained: inlined fonts + an optimized ~14 KB logo, ~120 KB total).
+- **Deploy model (to set up):** connect a **Cloudflare Pages** project to that repo (prod
+  branch `main`, no build command, output `/`) and move the `SMSPolicy.hubwisetech.net`
+  custom domain onto it, replacing the direct-upload deployment. Then push-to-`main` deploys.
+- ⚠️ **Cross-session push boundary:** the repo is under the **`hubwisetech` org**, but Claude
+  Code sessions scoped to *this* (`scottfywil/homeassistant`) repo **cannot push to it** —
+  git-proxy has no creds for it and the GitHub-API write is policy-denied. To edit the page
+  with Claude, **start a session with `hubwisetech/hubwise-sms-policy` as its source** (that
+  session's git proxy is scoped to it). The finished `index.html` was delivered to the user to
+  seed the repo (web upload) in the meantime.
+- **Browser-gated steps** (Cloudflare Pages connect + Twilio console resubmit) need a local
+  `claude --chrome` session; this cloud session has no browser tools.
+
+**Also this session (2026-07-18):** TFV answers finalized (pack below, ready to paste);
+`packages/cabinet_alerts.yaml` pre-staged on branch `claude/homeassistant-twilio-sms-c2pztc`
+(draft PR — DO NOT merge to main until TFV approved + real secrets on the box; CI passes via
+the new placeholder keys added to `secrets.yaml.example`). Cloud sessions have no browser
+access to the Twilio console / HA UI — console steps need a desktop session with Claude in
+Chrome, or Scott pasting the pack manually.
 
 **Contact sensors — SONOFF SNZB-04P Gen2 (4-pack), user pairing manually in Z2M:**
 - Kitchen liquor cabinet = **1 door** → sensor "**Liquor Cabinet**" (Kitchen). *(Was mounted;
@@ -398,21 +550,40 @@ end of this section.
 - Account SID + auth token are **not recorded here** (they live only in `secrets.yaml` on
   the box when set — find the SID on the Twilio Console home page).
 
-**Drafted toll-free verification answers (paste when TFV form is reachable):**
-- Use case category: **Security Alert** (fallback: Notifications). Volume ~50/mo.
-- Use case: private home-automation alerts from the owner's Home Assistant to the 2
-  household members; triggered by their own door/cabinet/tamper sensors; no marketing,
-  no third-party/purchased recipients, no public sign-up.
-- Opt-in: **Verbal** — the 2 recipients (owner + spouse) consented directly; numbers
-  entered manually into the system config; reply STOP to opt out, HELP for help.
-- Sample msg: `Home Alert: Liquor Cabinet opened — Jul 16, 9:42 PM. Reply STOP to opt out.`
+**FINALIZED toll-free verification pack (paste into the senders-onboarding form once the
+policy URL resolves publicly):**
+- Number: **(877) 600-5343** · Compliance profile: **HubWise (Business, Approved)**
+- Use case category: **Customer Care** (fallback: **Notifications**) · Volume: **~500/mo**
+  (pick the 1,000 tier if the form only offers fixed tiers).
+- Use case description (≤500 chars, verbatim):
+  > HubWise Technology, a managed IT services provider, sends service and operational SMS
+  > to clients and staff — primarily out-of-band incident/outage alerts (e.g., texting
+  > client contacts when their email is down), plus ticket and service updates.
+  > Transactional messaging only; no marketing or promotional content.
+- Opt-in type: **Paper form** (consent via signed MSA — clients authorize service SMS to
+  the mobile contacts they provide; numbers come only from signed client records).
+- Opt-in documentation URL, Terms & Conditions URL, Privacy policy URL — all three:
+  **https://SMSPolicy.hubwisetech.net**
+- Message samples (3):
+  1. `HubWise Alert: We've detected an outage affecting your email/service and are working
+     to restore it. We'll text updates here. Reply STOP to opt out.`
+  2. `HubWise Update: Ticket #4821 — the issue you reported has been resolved. If you're
+     still having trouble, reply HELP or call us. Reply STOP to opt out.`
+  3. `HubWise Ops Alert: Facility sensor 'Bar Cabinet' opened — Jul 16, 9:42 PM. Reply HELP
+     for help or STOP to opt out.`
+  (Sample 3 covers the internal operational/facility alerts — the cabinet automation's SMS
+  text mirrors it exactly.)
+- STOP = opt out, HELP = help. Transactional only; no marketing.
 
-**Planned package (DO NOT build until Twilio TFV is approved — per user):**
+**Package — BUILT, staged on branch `claude/homeassistant-twilio-sms-c2pztc` (2026-07-18,
+draft PR; DO NOT merge until TFV approved + secrets on box):**
 `packages/cabinet_alerts.yaml`: binary-sensor *group* per cabinet (either door = open) →
-notify **email + SMS** on open; separate **tamper** alerts. Keep message text matching the
-registered sample. Notifiers: SMTP2GO SMTP + Twilio (`notify.twilio`).
-**Secrets prerequisite** (user types into `/config/secrets.yaml` BEFORE the package is
-pushed, or CI/config-check fails on missing `!secret`): `smtp2go_username`,
+notify **email + SMS** on open; separate **tamper** alert (all 3 tamper sensors). SMS text
+mirrors registered sample 3. Notifiers: SMTP2GO SMTP (`notify.alert_email`) + Twilio
+(`notify.alert_sms`, from +18776005343). Entity IDs assume Z2M names "Liquor Cabinet",
+"Bar Cabinet Left/Right" → `binary_sensor.<slug>_contact`/`_tamper` — **verify after
+pairing**. Placeholder keys were added to `secrets.yaml.example` so CI passes; the box
+still needs the REAL values in `/config/secrets.yaml` before merge: `smtp2go_username`,
 `smtp2go_password`, `alert_sender`, `alert_email_scott`, `alert_email_wife`,
 `twilio_account_sid`, `twilio_auth_token`, `twilio_from_number` (+18776005343),
 `alert_sms_scott`, `alert_sms_wife`.
@@ -423,18 +594,35 @@ pushed, or CI/config-check fails on missing `!secret`): `smtp2go_username`,
   `notify.garage_alert_email_swilson_hubwisetech_com`, **or** — if a separate sender/recipient
   set is wanted — add a **second SMTP config entry through the UI** (Settings → Devices &
   Services → Add integration → SMTP) and target that entity. Nothing SMTP-related is declared
-  in YAML anymore.
+  in YAML anymore. ⚠️ **`packages/cabinet_alerts.yaml` still contains the old
+  `notify: platform: smtp` block, so it must be reworked to this UI / `notify.send_message`
+  model before it can merge — a follow-up independent of TFV approval.**
 - Because of that, the SMTP `!secret` keys are no longer needed for this package: only
   `alert_email_wife` (as a recipient typed into the UI entry, not a secret) and the five
   Twilio secrets remain outstanding. `smtp2go_username`/`smtp2go_password`/`alert_sender`/
   `alert_email_scott` are already stored in the SMTP config entry and proven working
   (`mail.smtp2go.com:587` STARTTLS, real delivered test email).
+- Twilio side unchanged: the cabinet package declares the global `twilio:` key (garage does
+  not) and sends SMS via `notify.alert_sms` (from +18776005343); no duplicate `twilio:` keys.
 
-**Resume checklist:** (1) HubWise business profile Approved ✅ → (2) build+host SMS policy
-page at SMSPolicy.hubwisetech.net (Prompt A below) → (3) finish + submit toll-free
-verification (Prompt B below) → (4) TFV approved → (5) confirm cabinet sensors
-paired/named/area-assigned → (6) fill secrets.yaml → (7) push `cabinet_alerts.yaml` → (8)
-test with a real cabinet open.
+**Resume checklist:** (1) HubWise business profile Approved ✅ → (2) SMS policy page live +
+publicly verified ✅ → (3) toll-free verification submitted ✅ 2026-07-18 → (3a) **TFV REJECTED
+❌ 2026-07-24 (reason 30513 — opt-in/consent); fix built, RESUBMIT pending** → seed
+`hubwisetech/hubwise-sms-policy` with the updated `index.html`, point Cloudflare Pages at it,
+then edit + resubmit the TFV (opt-in doc URL → `.../#consent`). See the "TFV REJECTED" +
+"Policy page now Git-backed" subsections above. → (4) **TFV approved ⏳ (check Twilio Console →
+Phone Numbers → Regulatory Compliance → Toll-Free Verification)** → (5) cabinet sensors verified ✅ — all six entities present, but ⚠️ **their
+actual entity IDs are the Z2M IEEE-address defaults, NOT the friendly-name slugs** (corrected
+via live HA API 2026-07-19; the earlier "exact IDs the package expects" claim was wrong — the
+nice names are HA `name_by_user` device overrides applied post-discovery, which change
+`friendly_name` only, so `entity_id` stayed IEEE-based). Real IDs (all healthy: 100% battery,
+3200mV, correct areas): Liquor Cabinet = `binary_sensor.0xa4c13811e7d6ffff_{contact,tamper}`
+(Kitchen); Bar Cabinet Left = `0xa4c13812a7e0ffff` (Rec Room); Bar Cabinet Right =
+`0xa4c138121bcbffff` (Rec Room). **`packages/cabinet_alerts.yaml` updated on the branch to use
+these real IDs** (2026-07-19). → (6) real secrets in
+`/config/secrets.yaml` on the box ✅ 2026-07-18 (all 10 keys: SMTP2GO + Twilio + recipients)
+→ (7) merge the `cabinet_alerts.yaml` draft PR (#1) to main → (8) test with a real cabinet
+open.
 
 ### Handoff Prompt A — build the SMS policy page (run in a fresh session first)
 

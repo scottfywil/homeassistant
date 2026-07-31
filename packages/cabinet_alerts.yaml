@@ -1,0 +1,152 @@
+# Cabinet open/tamper alerts — email (SMTP2GO) + SMS (Twilio toll-free).
+#
+# ✅ Twilio toll-free verification for +1 (877) 600-5343 was APPROVED 2026-07-30
+#    (request HHd1ae8477c43c4872175bc9ce91f5aa16). Consent is collected on the
+#    standalone web form at https://SMSPolicy.hubwisetech.net/optin — NOT in the
+#    MSA; see docs/09 "Cabinet alerting" for why that distinction matters.
+#
+# DO NOT MERGE TO MAIN until the real values for every !secret key below exist
+# in /config/secrets.yaml on the box (CI passes with secrets.yaml.example, but
+# GitOps deploys main to the box and a missing !secret fails the config check
+# mid-restart). Still required there: twilio_account_sid, twilio_auth_token,
+# twilio_from_number, alert_sms_scott, alert_sms_wife.
+#
+# EMAIL: there is deliberately NO `notify: platform: smtp` block here. YAML SMTP
+# is removed in HA 2027.1, and the SMTP2GO credentials now live only in a UI
+# config entry (Settings → Devices & Services → SMTP, service
+# "garage_alert_email", id 01KY0W5XKTB4195ZKTEF4K5GGE). Recipients are sub-entries
+# of that service, one notify entity each. Verified live on the box 2026-07-30:
+#   notify.garage_alert_email_swilson_hubwisetech_com  → Scott
+#   notify.garage_alert_email_megan                    → Megan (added 2026-07-30)
+# Both are targeted together via notify.send_message. The service keeps its
+# "garage_alert_email" name for historical reasons — renaming it would change the
+# derived entity_ids and break the four live garage automations, so don't.
+# Consequently alert_email_scott / alert_email_wife in secrets.yaml.example are
+# now documentation only; no YAML references them.
+#
+# Sensors: SONOFF SNZB-04P via Zigbee2MQTT. Entity IDs are the Z2M IEEE-address
+# defaults (the nice "Liquor Cabinet"/"Bar Cabinet L/R" names are HA device
+# name_by_user overrides applied AFTER discovery, so they change friendly_name
+# only — the entity_id stays IEEE-based). Verified live via the HA API 2026-07-19:
+#   Liquor Cabinet     -> binary_sensor.0xa4c13811e7d6ffff_{contact,tamper}  (Kitchen)
+#   Bar Cabinet Left   -> binary_sensor.0xa4c13812a7e0ffff_{contact,tamper}  (Rec Room)
+#   Bar Cabinet Right  -> binary_sensor.0xa4c138121bcbffff_{contact,tamper}  (Rec Room)
+# SMS text mirrors the message samples registered with Twilio TFV.
+
+twilio:
+  account_sid: !secret twilio_account_sid
+  auth_token: !secret twilio_auth_token
+
+binary_sensor:
+  - platform: group
+    name: "Liquor Cabinet Doors"
+    unique_id: liquor_cabinet_doors
+    device_class: opening
+    entities:
+      - binary_sensor.0xa4c13811e7d6ffff_contact  # Liquor Cabinet (Kitchen)
+
+  - platform: group
+    name: "Bar Cabinet Doors"
+    unique_id: bar_cabinet_doors
+    device_class: opening
+    entities:
+      - binary_sensor.0xa4c13812a7e0ffff_contact  # Bar Cabinet Left (Rec Room)
+      - binary_sensor.0xa4c138121bcbffff_contact  # Bar Cabinet Right (Rec Room)
+
+notify:
+  # Only the Twilio SMS notifier is declared in YAML. `twilio_sms` is NOT
+  # deprecated — the 2027.1 removal applies to `platform: smtp` only. Email goes
+  # through the UI SMTP config entry via notify.send_message (see header).
+  - platform: twilio_sms
+    name: alert_sms
+    from_number: !secret twilio_from_number
+
+automation:
+  - alias: "Cabinet - Liquor Cabinet opened"
+    id: cabinet_liquor_opened
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.liquor_cabinet_doors
+        from: "off"
+        to: "on"
+    actions:
+      - action: notify.send_message
+        target:
+          entity_id:
+            - notify.garage_alert_email_swilson_hubwisetech_com
+            - notify.garage_alert_email_megan
+        data:
+          title: "Liquor Cabinet opened"
+          message: >-
+            Liquor Cabinet (Kitchen) opened —
+            {{ now().strftime('%b %-d, %-I:%M %p') }}.
+      - action: notify.alert_sms
+        data:
+          message: >-
+            HubWise Ops Alert: Facility sensor 'Liquor Cabinet' opened —
+            {{ now().strftime('%b %-d, %-I:%M %p') }}.
+            Reply HELP for help or STOP to opt out.
+          target:
+            - !secret alert_sms_scott
+            - !secret alert_sms_wife
+
+  - alias: "Cabinet - Bar Cabinet opened"
+    id: cabinet_bar_opened
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.bar_cabinet_doors
+        from: "off"
+        to: "on"
+    actions:
+      - action: notify.send_message
+        target:
+          entity_id:
+            - notify.garage_alert_email_swilson_hubwisetech_com
+            - notify.garage_alert_email_megan
+        data:
+          title: "Bar Cabinet opened"
+          message: >-
+            Bar Cabinet (Rec Room, either door) opened —
+            {{ now().strftime('%b %-d, %-I:%M %p') }}.
+      - action: notify.alert_sms
+        data:
+          message: >-
+            HubWise Ops Alert: Facility sensor 'Bar Cabinet' opened —
+            {{ now().strftime('%b %-d, %-I:%M %p') }}.
+            Reply HELP for help or STOP to opt out.
+          target:
+            - !secret alert_sms_scott
+            - !secret alert_sms_wife
+
+  - alias: "Cabinet - sensor tamper detected"
+    id: cabinet_tamper_alert
+    mode: queued
+    triggers:
+      - trigger: state
+        entity_id:
+          - binary_sensor.0xa4c13811e7d6ffff_tamper  # Liquor Cabinet (Kitchen)
+          - binary_sensor.0xa4c13812a7e0ffff_tamper  # Bar Cabinet Left (Rec Room)
+          - binary_sensor.0xa4c138121bcbffff_tamper  # Bar Cabinet Right (Rec Room)
+        from: "off"
+        to: "on"
+    actions:
+      - action: notify.send_message
+        target:
+          entity_id:
+            - notify.garage_alert_email_swilson_hubwisetech_com
+            - notify.garage_alert_email_megan
+        data:
+          title: "Cabinet sensor tamper"
+          message: >-
+            Tamper detected on {{ trigger.to_state.name }} —
+            {{ now().strftime('%b %-d, %-I:%M %p') }}.
+      - action: notify.alert_sms
+        data:
+          message: >-
+            HubWise Ops Alert: Tamper detected on facility sensor
+            '{{ trigger.to_state.name }}' —
+            {{ now().strftime('%b %-d, %-I:%M %p') }}.
+            Reply HELP for help or STOP to opt out.
+          target:
+            - !secret alert_sms_scott
+            - !secret alert_sms_wife
