@@ -1,9 +1,28 @@
 # Cabinet open/tamper alerts — email (SMTP2GO) + SMS (Twilio toll-free).
 #
-# DO NOT MERGE TO MAIN until BOTH are true (GitOps deploys main to the box):
-#   1. Twilio toll-free verification for +1 (877) 600-5343 is APPROVED.
-#   2. The real values for every !secret key below exist in /config/secrets.yaml
-#      on the box (CI passes with secrets.yaml.example; the box needs real ones).
+# ✅ Twilio toll-free verification for +1 (877) 600-5343 was APPROVED 2026-07-30
+#    (request HHd1ae8477c43c4872175bc9ce91f5aa16). Consent is collected on the
+#    standalone web form at https://SMSPolicy.hubwisetech.net/optin — NOT in the
+#    MSA; see docs/09 "Cabinet alerting" for why that distinction matters.
+#
+# DO NOT MERGE TO MAIN until the real values for every !secret key below exist
+# in /config/secrets.yaml on the box (CI passes with secrets.yaml.example, but
+# GitOps deploys main to the box and a missing !secret fails the config check
+# mid-restart). Still required there: twilio_account_sid, twilio_auth_token,
+# twilio_from_number, alert_sms_scott, alert_sms_wife.
+#
+# EMAIL: there is deliberately NO `notify: platform: smtp` block here. YAML SMTP
+# is removed in HA 2027.1, and the SMTP2GO credentials now live only in a UI
+# config entry (Settings → Devices & Services → SMTP, service
+# "garage_alert_email", id 01KY0W5XKTB4195ZKTEF4K5GGE). Recipients are sub-entries
+# of that service, one notify entity each. Verified live on the box 2026-07-30:
+#   notify.garage_alert_email_swilson_hubwisetech_com  → Scott
+#   notify.garage_alert_email_megan                    → Megan (added 2026-07-30)
+# Both are targeted together via notify.send_message. The service keeps its
+# "garage_alert_email" name for historical reasons — renaming it would change the
+# derived entity_ids and break the four live garage automations, so don't.
+# Consequently alert_email_scott / alert_email_wife in secrets.yaml.example are
+# now documentation only; no YAML references them.
 #
 # Sensors: SONOFF SNZB-04P via Zigbee2MQTT. Entity IDs are the Z2M IEEE-address
 # defaults (the nice "Liquor Cabinet"/"Bar Cabinet L/R" names are HA device
@@ -35,19 +54,9 @@ binary_sensor:
       - binary_sensor.0xa4c138121bcbffff_contact  # Bar Cabinet Right (Rec Room)
 
 notify:
-  - platform: smtp
-    name: alert_email
-    server: mail.smtp2go.com
-    port: 587
-    encryption: starttls
-    username: !secret smtp2go_username
-    password: !secret smtp2go_password
-    sender: !secret alert_sender
-    sender_name: "HubWise Alerts"
-    recipient:
-      - !secret alert_email_scott
-      - !secret alert_email_wife
-
+  # Only the Twilio SMS notifier is declared in YAML. `twilio_sms` is NOT
+  # deprecated — the 2027.1 removal applies to `platform: smtp` only. Email goes
+  # through the UI SMTP config entry via notify.send_message (see header).
   - platform: twilio_sms
     name: alert_sms
     from_number: !secret twilio_from_number
@@ -61,7 +70,11 @@ automation:
         from: "off"
         to: "on"
     actions:
-      - action: notify.alert_email
+      - action: notify.send_message
+        target:
+          entity_id:
+            - notify.garage_alert_email_swilson_hubwisetech_com
+            - notify.garage_alert_email_megan
         data:
           title: "Liquor Cabinet opened"
           message: >-
@@ -85,7 +98,11 @@ automation:
         from: "off"
         to: "on"
     actions:
-      - action: notify.alert_email
+      - action: notify.send_message
+        target:
+          entity_id:
+            - notify.garage_alert_email_swilson_hubwisetech_com
+            - notify.garage_alert_email_megan
         data:
           title: "Bar Cabinet opened"
           message: >-
@@ -113,7 +130,11 @@ automation:
         from: "off"
         to: "on"
     actions:
-      - action: notify.alert_email
+      - action: notify.send_message
+        target:
+          entity_id:
+            - notify.garage_alert_email_swilson_hubwisetech_com
+            - notify.garage_alert_email_megan
         data:
           title: "Cabinet sensor tamper"
           message: >-

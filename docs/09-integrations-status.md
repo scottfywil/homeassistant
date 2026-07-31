@@ -368,11 +368,80 @@ OFF when *neither* has an active job.
 - Delivered via PR [#3](https://github.com/scottfywil/homeassistant/pull/3) → CI green
   (yamllint, HA config check, ESPHome config check) → squash-merged to `main` → GitOps deploy.
 
-## Cabinet alerting — TFV REJECTED (30513), fixing + resubmitting (updated 2026-07-25)
+## Cabinet alerting — ✅ TFV APPROVED 2026-07-30 (updated 2026-07-30)
 
 **Goal:** notify Scott + wife whenever the liquor/bar cabinets open, AND double the toll-free
 number as a **HubWise customer-care/outage-notification tool**. Channels: **email
 (SMTP2GO, ready)** + **SMS (Twilio)**. Companion-app push was declined by user.
+
+### ✅✅ TFV APPROVED 2026-07-30 — attempt 3 (standalone web opt-in form) worked
+
+- **Request** `HHd1ae8477c43c4872175bc9ce91f5aa16` (**edited**, never recreated, so the
+  prioritized queue was preserved), number `+18776005343`,
+  PN SID `PN1cb92ab681d5b4ce6e7f026a0970a344`, business "Hubwise Technology, Inc."
+  Resubmitted 2026-07-28, **Approved** by 2026-07-30 (~2 days).
+- **What actually fixed it:** consent was moved *out of the MSA entirely* onto a real
+  standalone web form at **https://SMSPolicy.hubwisetech.net/optin**. Because that form is
+  simultaneously the registered mechanism *and* the hosted evidence, 30475 (consent cannot
+  live inside another agreement) and 30498 (workflow must match the evidence) were resolved
+  **by construction rather than by rewording** — which is why attempts 1 and 2 both failed:
+  they kept re-wording an MSA clause that was structurally disallowed.
+- **Registered values** (Twilio console → Trust Hub → Registrations → Toll-free):
+  opt-in type **Web Form**; proof-of-consent URL `https://SMSPolicy.hubwisetech.net/optin`;
+  use case Customer Care; volume 1,000/mo; T&C + Privacy both
+  `https://SMSPolicy.hubwisetech.net/`; age-gated No; the 3 message samples unchanged.
+- ⚠️ **The "Additional information" field is capped at 500 characters.** The intended
+  621-char opt-in description would not save (submit stayed disabled with a "Limit to 500
+  characters" error). The registered 494-char text is recorded verbatim in
+  `hubwisetech/hubwise-sms-policy` → `PLAN.md`. If it is ever edited, keep it under 500 and
+  **keep the "optional, separate from any agreement, not a condition of service" clause —
+  that clause is the 30475 fix.**
+- **The `/optin` form is now load-bearing compliance infrastructure.** It is the only
+  sanctioned way a number enters this SMS program, and each submission email to
+  `hwadmin@hubwisetech.com` is the retained consent record. If `POST /api/optin` breaks,
+  consent silently stops being recorded while the form still appears to submit. The
+  `SMTP2GO_API_KEY` lives only in the Cloudflare Worker's settings, so a Worker rebuild from
+  that repo alone comes up unable to record consent until the secret is re-added.
+- Policy-page repo work: commits `45cc453` (mechanism change), `b2f0f76` (deleted the stale
+  `HANDOFF.md`, which still described the disallowed MSA-consent model as "the fix"),
+  `2d3d958` (approval recorded).
+
+### Email side moved off YAML SMTP — 2026-07-30
+
+- `packages/cabinet_alerts.yaml` never shipped a `notify: platform: smtp` block to `main`.
+  It was reworked *before* merge to the same UI-config-entry model the garage package already
+  uses (YAML SMTP is removed in HA **2027.1**).
+- **The SMTP integration separates the service from its recipients.** One service
+  (`garage_alert_email`, id `01KY0W5XKTB4195ZKTEF4K5GGE`, holds the SMTP2GO credentials) with
+  **one notify entity per recipient sub-entry**. Verified live on the box 2026-07-30:
+
+  | Entity | Recipient | Added |
+  | --- | --- | --- |
+  | `notify.garage_alert_email_swilson_hubwisetech_com` | Scott | 2026-07-26 (auto-import) |
+  | `notify.garage_alert_email_megan` | Megan (address is in the config entry, not this repo) | 2026-07-30 |
+
+  Megan was added via **Add recipient** on the existing service, deliberately *not* as a new
+  service: no SMTP2GO credentials had to be re-entered, and the garage automations were
+  unaffected because they target the `swilson` entity by name. Setting the recipient **Name**
+  to "Megan" is why the entity is the readable `..._megan` rather than a slugified address.
+- The service keeps the name `garage_alert_email` even though it now serves cabinet alerts
+  too. **Do not rename it** — HA derives entity_ids from it, so renaming would break the four
+  live garage automations. Cosmetic wart, accepted deliberately.
+- Consequence: `alert_email_scott` / `alert_email_wife` in `secrets.yaml.example` are now
+  **documentation only** — no YAML references them, the same as `smtp2go_username` /
+  `smtp2go_password` / `alert_sender` after the garage migration.
+- `notify: platform: twilio_sms` **stays in YAML** — the 2027.1 removal applies to
+  `platform: smtp` only, so `notify.alert_sms` is unaffected.
+- ⚠️ **Still blocking the merge:** the real Twilio values must be in `/config/secrets.yaml`
+  on the box — `twilio_account_sid`, `twilio_auth_token`, `twilio_from_number`,
+  `alert_sms_scott`, `alert_sms_wife`. CI passes against `secrets.yaml.example`, but GitOps
+  deploys `main` to the box and a missing `!secret` fails the config check mid-restart.
+
+### History — attempts 1 and 2 (superseded, kept for the record)
+
+Everything below this line predates the approval above. **The MSA-consent model it describes
+is structurally disallowed (30475) — do not follow any of it.** It is retained only to explain
+why the mechanism changed and to keep the rejection reasoning findable.
 
 **Latest status (2026-07-18):** HubWise **Business** compliance profile is **Approved** (the
 earlier Individual profile was rejected by TFV). Toll-free registration is mid-form; use case
