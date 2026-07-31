@@ -1,5 +1,9 @@
-# Garage-open overnight alert. Email only for now; SMS drops in once Twilio
-# TFV is approved (see docs/09-integrations-status.md, "Cabinet alerting").
+# Garage-open overnight alert: email + SMS.
+# SMS added 2026-07-31 after Twilio toll-free verification for (877) 600-5343 was
+# approved (2026-07-30). Reuses the cabinet package's notify.alert_sms (twilio_sms)
+# — the global `twilio:` key is declared ONLY in packages/cabinet_alerts.yaml;
+# never declare a second one. SMS goes to Scott only, matching this package's
+# email audience. Text follows the TFV-registered "HubWise Ops Alert" sample.
 #
 # The SMTP notifier is NO LONGER declared here. YAML `notify: platform: smtp`
 # is removed in HA 2027.1; HA auto-imported the old block into a UI config
@@ -37,12 +41,17 @@ automation:
             Dad garage door has been open since
             {{ as_local(trigger.to_state.last_changed).strftime('%-I:%M %p') }}
             (10+ minutes).
+      - action: notify.alert_sms
+        data:
+          message: >-
+            HubWise Ops Alert: Facility sensor 'Dad Garage' open since
+            {{ as_local(trigger.to_state.last_changed).strftime('%-I:%M %p') }}
+            (10+ min). Reply HELP for help or STOP to opt out.
+          target:
+            - !secret alert_sms_scott
       - action: input_boolean.turn_on
         target:
           entity_id: input_boolean.garage_dad_alerted
-          # TODO(TFV): add a notify.alert_sms action here once Twilio toll-free
-          # verification is approved — reuse the cabinet package's Twilio
-          # notifier, do NOT declare a second `twilio:` block (it's a global key).
 
   - alias: "Garage - Dad closed all-clear"
     id: garage_dad_closed_all_clear
@@ -61,10 +70,16 @@ automation:
         data:
           title: "Garage Alert - All Clear"
           message: "Dad garage door is now closed."
+      - action: notify.alert_sms
+        data:
+          message: >-
+            HubWise Ops Alert: Facility sensor 'Dad Garage' closed — all clear.
+            Reply HELP for help or STOP to opt out.
+          target:
+            - !secret alert_sms_scott
       - action: input_boolean.turn_off
         target:
           entity_id: input_boolean.garage_dad_alerted
-          # TODO(TFV): add a notify.alert_sms all-clear action once Twilio TFV is approved.
 
   - alias: "Garage - Mom open too long (overnight)"
     id: garage_mom_open_overnight
@@ -87,12 +102,17 @@ automation:
             Mom garage door has been open since
             {{ as_local(trigger.to_state.last_changed).strftime('%-I:%M %p') }}
             (10+ minutes).
+      - action: notify.alert_sms
+        data:
+          message: >-
+            HubWise Ops Alert: Facility sensor 'Mom Garage' open since
+            {{ as_local(trigger.to_state.last_changed).strftime('%-I:%M %p') }}
+            (10+ min). Reply HELP for help or STOP to opt out.
+          target:
+            - !secret alert_sms_scott
       - action: input_boolean.turn_on
         target:
           entity_id: input_boolean.garage_mom_alerted
-          # TODO(TFV): add a notify.alert_sms action here once Twilio toll-free
-          # verification is approved — reuse the cabinet package's Twilio
-          # notifier, do NOT declare a second `twilio:` block (it's a global key).
 
   - alias: "Garage - Mom closed all-clear"
     id: garage_mom_closed_all_clear
@@ -111,7 +131,13 @@ automation:
         data:
           title: "Garage Alert - All Clear"
           message: "Mom garage door is now closed."
+      - action: notify.alert_sms
+        data:
+          message: >-
+            HubWise Ops Alert: Facility sensor 'Mom Garage' closed — all clear.
+            Reply HELP for help or STOP to opt out.
+          target:
+            - !secret alert_sms_scott
       - action: input_boolean.turn_off
         target:
           entity_id: input_boolean.garage_mom_alerted
-          # TODO(TFV): add a notify.alert_sms all-clear action once Twilio TFV is approved.
