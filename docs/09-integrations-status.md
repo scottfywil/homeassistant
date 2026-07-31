@@ -1,7 +1,7 @@
 # 09 — Integrations Status (living doc)
 
 Snapshot of what's actually running on the box. Update as integrations are
-added. Last updated: **2026-07-25**.
+added. Last updated: **2026-07-31**.
 
 ## Platform state
 
@@ -368,11 +368,21 @@ OFF when *neither* has an active job.
 - Delivered via PR [#3](https://github.com/scottfywil/homeassistant/pull/3) → CI green
   (yamllint, HA config check, ESPHome config check) → squash-merged to `main` → GitOps deploy.
 
-## Cabinet alerting — ✅ TFV APPROVED 2026-07-30 (updated 2026-07-30)
+## Cabinet alerting — ✅✅ COMPLETE: live-tested 2026-07-31 (updated 2026-07-31)
 
 **Goal:** notify Scott + wife whenever the liquor/bar cabinets open, AND double the toll-free
 number as a **HubWise customer-care/outage-notification tool**. Channels: **email
 (SMTP2GO, ready)** + **SMS (Twilio)**. Companion-app push was declined by user.
+
+### 🏁 LIVE TEST PASSED 2026-07-31 — project complete
+PR #1 merged 2026-07-31 → GitOps deployed → **real cabinet-open test: BOTH channels
+delivered** — SMTP2GO email (via the UI SMTP entry's notify entities) and Twilio SMS from
+**+18776005343** — to Scott + Megan. End-to-end chain verified: SNZB-04P contact → Z2M →
+binary_sensor group → automation → email + SMS. The 13-day arc (number purchase → Business
+profile → policy page → 2 TFV rejections → web-form opt-in → approval → deploy → live test)
+is closed. Follow-up candidates, not yet done: add `notify.alert_sms` to the garage alerts
+(the `# TODO(TFV)` markers in `packages/garage_alerts.yaml` are now unblocked), and wire the
+number into HubWise's actual client outage-alert workflow.
 
 ### ✅✅ TFV APPROVED 2026-07-30 — attempt 3 (standalone web opt-in form) worked
 
