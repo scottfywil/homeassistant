@@ -316,9 +316,13 @@ implementation plan: [docs/superpowers/plans/2026-07-20-garage-open-alert.md](su
   rendered the Jinja timestamp template live (`23:01:57 UTC` → correctly showed `6:01 PM
   CDT`); called `notify.garage_alert_email` with a real test message — **email received by
   Scott, confirming SMTP2GO delivery end-to-end.**
-- **SMS deferred:** each action block has a `# TODO(TFV)` marker — add a `notify.alert_sms`
-  action once Twilio toll-free verification is approved (see "Cabinet alerting" below); reuse
-  its Twilio notifier, do not declare a second `twilio:` key.
+- ✅ **SMS added + live-verified 2026-07-31** (PR [#9](https://github.com/scottfywil/homeassistant/pull/9),
+  resolving the `# TODO(TFV)` markers): all 4 automations (open-too-long + all-clear, per
+  door) also send SMS via the cabinet package's `notify.alert_sms` (from +18776005343),
+  **Scott-only** (user decision — matches this package's email audience; Megan gets cabinet
+  SMS only). Text follows the TFV-registered "HubWise Ops Alert" sample with STOP/HELP. No
+  second `twilio:` key. **Verified via Developer Tools "Run actions" post-deploy: email + SMS
+  both received.**
 - Delivered via PR [#2](https://github.com/scottfywil/homeassistant/pull/2) → CI green
   (yamllint, HA config check, ESPHome config check) → merged to `main` → GitOps deploy.
 - ⚠️ **SMTP moved out of YAML — 2026-07-26.** HA raised a repair: YAML `notify: platform: smtp`
@@ -380,8 +384,7 @@ delivered** — SMTP2GO email (via the UI SMTP entry's notify entities) and Twil
 **+18776005343** — to Scott + Megan. End-to-end chain verified: SNZB-04P contact → Z2M →
 binary_sensor group → automation → email + SMS. The 13-day arc (number purchase → Business
 profile → policy page → 2 TFV rejections → web-form opt-in → approval → deploy → live test)
-is closed. Follow-up candidates, not yet done: add `notify.alert_sms` to the garage alerts
-(the `# TODO(TFV)` markers in `packages/garage_alerts.yaml` are now unblocked), and wire the
+is closed. Follow-ups: garage SMS ✅ done 2026-07-31 (PR #9); still open: wire the
 number into HubWise's actual client outage-alert workflow.
 
 ### ✅✅ TFV APPROVED 2026-07-30 — attempt 3 (standalone web opt-in form) worked
