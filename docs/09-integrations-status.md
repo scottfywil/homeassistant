@@ -1,7 +1,7 @@
 # 09 — Integrations Status (living doc)
 
 Snapshot of what's actually running on the box. Update as integrations are
-added. Last updated: **2026-07-31**.
+added. Last updated: **2026-08-09**.
 
 ## Platform state
 
@@ -347,6 +347,20 @@ implementation plan: [docs/superpowers/plans/2026-07-20-garage-open-alert.md](su
     and a real `notify.send_message` to the entity returned OK with the entity timestamp
     advancing — SMTP2GO accepted the message. Delivered via
     PR [#7](https://github.com/scottfywil/homeassistant/pull/7).
+- ⚠️ **Bug found + fixed 2026-08-09: the overnight trigger could silently never fire.**
+  Dad's door opened **9:45:28 PM on 2026-08-05**; the one-shot `state`→`on` `for: 10min`
+  trigger fired at **9:55:28 PM**, but the 22:00–05:00 time condition failed (not yet
+  22:00) and — since a `state` trigger with `for:` evaluates the window exactly once —
+  nothing ever re-checked. The door stayed open until **6:28 AM**; no alert sent.
+  Confirmed via the automation trace (`failed_conditions` on the time check) + recorder
+  history. **Root cause:** any door open before 21:50 that stays open past 22:00 could
+  never alert. **Fix:** both overnight automations gained a second trigger — `time` at
+  **22:10:00** — plus two extra conditions (door `state: "on"` for 10+ min; guard
+  `input_boolean` `state: "off"`, to stop a duplicate email if both triggers fire the
+  same night), and the message templates moved off `trigger.to_state.last_changed`
+  (undefined for a time trigger) onto the sensor's own `last_changed`. **Known
+  limitation, deliberately not fixed:** an HA restart mid-window resets state timing, so
+  a door already open across a restart inside 22:00–05:00 can still be missed.
 
 ## Prusa Lamp print-activity automation — done 2026-07-21
 

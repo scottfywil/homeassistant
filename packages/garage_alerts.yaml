@@ -27,10 +27,23 @@ automation:
         entity_id: binary_sensor.0xffffb40e0601d430_contact
         to: "on"
         for: "00:10:00"
+      # 22:10 catch-up: a door opened before 21:50 fires its state trigger
+      # before the 22:00-05:00 window opens, so the time condition below
+      # fails and the trigger never re-fires. This re-checks shortly after
+      # the window starts so an already-open door still alerts.
+      - trigger: time
+        at: "22:10:00"
     conditions:
       - condition: time
         after: "22:00:00"
         before: "05:00:00"
+      - condition: state
+        entity_id: binary_sensor.0xffffb40e0601d430_contact
+        state: "on"
+        for: "00:10:00"
+      - condition: state
+        entity_id: input_boolean.garage_dad_alerted
+        state: "off"
     actions:
       - action: notify.send_message
         target:
@@ -39,13 +52,13 @@ automation:
           title: "Garage Alert"
           message: >-
             Dad garage door has been open since
-            {{ as_local(trigger.to_state.last_changed).strftime('%-I:%M %p') }}
+            {{ as_local(states['binary_sensor.0xffffb40e0601d430_contact'].last_changed).strftime('%-I:%M %p') }}
             (10+ minutes).
       - action: notify.alert_sms
         data:
           message: >-
             HubWise Ops Alert: Facility sensor 'Dad Garage' open since
-            {{ as_local(trigger.to_state.last_changed).strftime('%-I:%M %p') }}
+            {{ as_local(states['binary_sensor.0xffffb40e0601d430_contact'].last_changed).strftime('%-I:%M %p') }}
             (10+ min). Reply HELP for help or STOP to opt out.
           target:
             - !secret alert_sms_scott
@@ -88,10 +101,23 @@ automation:
         entity_id: binary_sensor.mom_garage_sensor_contact
         to: "on"
         for: "00:10:00"
+      # 22:10 catch-up: a door opened before 21:50 fires its state trigger
+      # before the 22:00-05:00 window opens, so the time condition below
+      # fails and the trigger never re-fires. This re-checks shortly after
+      # the window starts so an already-open door still alerts.
+      - trigger: time
+        at: "22:10:00"
     conditions:
       - condition: time
         after: "22:00:00"
         before: "05:00:00"
+      - condition: state
+        entity_id: binary_sensor.mom_garage_sensor_contact
+        state: "on"
+        for: "00:10:00"
+      - condition: state
+        entity_id: input_boolean.garage_mom_alerted
+        state: "off"
     actions:
       - action: notify.send_message
         target:
@@ -100,13 +126,13 @@ automation:
           title: "Garage Alert"
           message: >-
             Mom garage door has been open since
-            {{ as_local(trigger.to_state.last_changed).strftime('%-I:%M %p') }}
+            {{ as_local(states['binary_sensor.mom_garage_sensor_contact'].last_changed).strftime('%-I:%M %p') }}
             (10+ minutes).
       - action: notify.alert_sms
         data:
           message: >-
             HubWise Ops Alert: Facility sensor 'Mom Garage' open since
-            {{ as_local(trigger.to_state.last_changed).strftime('%-I:%M %p') }}
+            {{ as_local(states['binary_sensor.mom_garage_sensor_contact'].last_changed).strftime('%-I:%M %p') }}
             (10+ min). Reply HELP for help or STOP to opt out.
           target:
             - !secret alert_sms_scott
