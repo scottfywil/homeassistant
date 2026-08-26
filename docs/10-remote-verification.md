@@ -5,44 +5,83 @@ container, not on your PC. That container **cannot see your LAN**:
 `homeassistant.local:8123` doesn't resolve, and there's no browser attached to
 drive the UI. So a cloud session can merge a config change but cannot confirm
 the Git Pull add-on actually deployed it — it can only tell you what landed on
-`main`.
+`main`. That gap is how a silently-failed deploy goes unnoticed.
 
-This runbook wires up read access so a cloud session can verify deploys itself.
-Three pieces: a reachable URL, a token, and a network policy that allows the
-traffic. All three are required; any one missing and the check fails.
+This runbook closes it over **Tailscale**, which the box is already on.
+Nabu Casa works too and is documented as a fallback at the end, but Tailscale
+is the better option: the traffic stays on your tailnet, it doesn't depend on
+the Nabu Casa subscription, and tailnet ACLs can restrict the container to one
+host and one port — real scoping that an HA token can't provide by itself.
 
-## 1. Reachable URL (Nabu Casa)
+## What was verified
 
-Already paying for it (see [03](03-nabu-casa-alexa.md)).
+Measured in a cloud session on 2026-07-25, not assumed:
 
-1. Settings → Home Assistant Cloud → Remote Control.
-2. Ensure remote access is **on** and copy the URL — it looks like
-   `https://<random-id>.ui.nabu.casa`.
+- `/dev/net/tun` exists and the session runs as root → a real TUN interface
+  works; no userspace-networking fallback needed.
+- The agent proxy's `noProxy` list already contains **`100.64.0.0/10`**, the
+  Tailscale CGNAT range → traffic to tailnet IPs routes directly instead of
+  through the proxy (which blocks most outbound HTTPS).
+- `tailscaled` 1.80.2 reached the control plane through the proxy:
+  `CONNECT ... controlplane.tailscale.com:443 → 200 Connection Established`.
 
-That hostname is the only ingress a cloud session can use. Don't port-forward
-8123 to the internet as an alternative; the Nabu Casa tunnel exists precisely
-so you don't have to.
+**Not yet verified:** the data plane. A node that authenticates still has to
+carry packets, either directly or via a DERP relay over HTTPS. DERP should
+traverse the same proxy path that the control plane did, but nothing here
+proves it until a node actually joins and an HTTP request to the box succeeds.
+Treat the first successful `curl` as the real test.
 
-⚠️ The Nabu Casa account is a **trial expiring 2026-08-14**
-([09](09-integrations-status.md)). When it lapses, remote verification stops
-working — that's the single point of failure here.
+## 1. Tailnet: auth key and ACL
 
-## 2. Token, minted from a dedicated non-admin user
+In the Tailscale admin console → Settings → Keys → **Generate auth key**:
 
-Home Assistant long-lived access tokens (LLATs) inherit the full permissions of
-the user who created them — **there is no read-only token scope**. So don't mint
-one from your own admin account. Create a limited user instead:
+- **Ephemeral** — on. The container is destroyed after each session; ephemeral
+  nodes remove themselves, so your device list doesn't fill with dead entries.
+- **Pre-approved** — on (only matters if device approval is enabled on the
+  tailnet). Without it the node joins but can't route until you approve it by
+  hand, which defeats the point.
+- **Reusable** — on. Every new session is a new node.
+- **Tags** — `tag:claude-code`. The tag is what the ACL keys off; an untagged
+  key gives the container your own user's access to the whole tailnet.
+
+Then scope it in the ACL editor. Grant the tag exactly one destination:
+
+```jsonc
+{
+  "tagOwners": {
+    "tag:claude-code": ["autogroup:admin"],
+  },
+  "acls": [
+    // ... existing rules ...
+    {
+      "action": "accept",
+      "src":    ["tag:claude-code"],
+      "dst":    ["<ha-host>:8123"],  // the HA node's name or tailnet IP
+    },
+  ],
+}
+```
+
+That's the security boundary worth having: even a leaked key reaches only
+port 8123 on one host, and only while a session is live.
+
+Note the box's **MagicDNS name or tailnet IP** (`100.x.y.z`) while you're in
+the console — the container needs it, and MagicDNS may not resolve there.
+
+## 2. Home Assistant: token from a non-admin user
+
+HA long-lived access tokens inherit the full permissions of the user who
+created them — **there is no read-only token scope**. Don't mint one from your
+admin account. Create a limited user:
 
 1. Settings → People → Add person.
    - Name: `Claude Verify`
    - "Allow person to login" → on
-   - **Advanced settings → Local access only → off** (it needs to come in over
-     the Nabu Casa tunnel)
+   - **Local access only → off** (tailnet traffic arrives as a remote client)
    - **Administrator → off**
-2. Log out, log back in **as that user**, click the user avatar (bottom left) →
-   Security tab → Long-lived access tokens → **Create token**. Name it
-   `claude-code-web`.
-3. Copy the token once — HA never shows it again.
+2. Log out, log in **as that user**, avatar (bottom left) → Security →
+   Long-lived access tokens → **Create token**, named `claude-code-web`.
+3. Copy it once — HA never shows it again.
 
 **Understand what you're handing over.** A non-admin token still reaches the
 REST API: it can read every entity's state and it *can* call services (turn
@@ -53,26 +92,58 @@ meaningful reduction, but this is not a read-only credential. Treat it as
 comfortable with that.
 
 Never put the token in this repo. `secrets.yaml` is gitignored and lives only
-on the box; the token belongs in the environment (next step), not in Git.
+on the box; the token belongs in the environment, below.
 
-## 3. Environment: variables + network policy
+## 3. Environment variables
 
 In the Claude Code web app → environment settings for this repo's environment
 (docs: <https://code.claude.com/docs/en/claude-code-on-the-web>):
 
-- **Environment variables**
-  - `HA_BASE_URL` = `https://<random-id>.ui.nabu.casa`
-  - `HA_TOKEN` = the token from step 2
-- **Network policy** — the default policy blocks general outbound HTTPS (a
-  cloud session gets `000` from `ui.nabu.casa` today). Pick a policy that
-  permits outbound to `*.ui.nabu.casa`, or add it to the allowlist if the
-  policy supports one. Without this, the variables are useless.
+| Variable      | Value                                     |
+| ------------- | ----------------------------------------- |
+| `TS_AUTHKEY`  | the tagged ephemeral key from step 1      |
+| `HA_BASE_URL` | `http://100.x.y.z:8123` (tailnet address) |
+| `HA_TOKEN`    | the token from step 2                     |
 
-Both apply to *new* sessions — an already-running session won't pick them up.
+`http://`, not `https://` — inside the tailnet the transport is already
+encrypted and the box has no cert for its tailnet address.
 
-## 4. Verification recipes
+No network-policy change is needed for the tailnet hop itself, since
+`100.64.0.0/10` bypasses the proxy. The control plane
+(`controlplane.tailscale.com`) already worked through it under the current
+policy; if a future policy tightens further, that host and Tailscale's DERP
+servers are what must stay reachable.
 
-Ping (proves URL + token + network policy all work):
+Environment variables apply to **new** sessions — a running one won't see them.
+
+## 4. Bootstrap in the session
+
+Tailscale isn't installed in the container, and the container is wiped between
+sessions, so each session installs and joins. Roughly 30 seconds:
+
+```bash
+cd "$SCRATCHPAD"   # or any writable dir
+curl -fsSL https://pkgs.tailscale.com/stable/tailscale_1.80.2_amd64.tgz -o ts.tgz
+tar xzf ts.tgz && mv tailscale_*/tailscale tailscale_*/tailscaled .
+(./tailscaled --state=ts.state --socket=ts.sock --tun=ts0 &)
+sleep 2
+./tailscale --socket=ts.sock up \
+  --authkey="$TS_AUTHKEY" --hostname=claude-code-web --accept-routes
+./tailscale --socket=ts.sock status   # should list the HA node
+```
+
+`--socket` and `--state` keep it self-contained in the scratchpad rather than
+writing to system paths. If `tailscale up` hangs instead of returning, that's
+the data-plane caveat from above — check `tsd.log` for DERP errors.
+
+To make this automatic, put it in a **SessionStart hook** (see
+[session-start-hook docs](https://code.claude.com/docs/en/claude-code-on-the-web))
+guarded on `TS_AUTHKEY` being set, so sessions without the key skip it cleanly
+rather than failing.
+
+## 5. Verification recipes
+
+Ping — proves tailnet, token, and HA all work together:
 
 ```bash
 curl -sS -H "Authorization: Bearer $HA_TOKEN" "$HA_BASE_URL/api/"
@@ -83,7 +154,7 @@ Confirm a specific automation deployed and is enabled:
 
 ```bash
 curl -sS -H "Authorization: Bearer $HA_TOKEN" \
-  "$HA_BASE_URL/api/states/automation.climate_one_shot_72f_setpoint_2026_07_26"
+  "$HA_BASE_URL/api/states/automation.<entity_id>"
 # .state == "on"; .attributes.last_triggered shows if it has fired
 ```
 
@@ -101,9 +172,9 @@ deploy failed.
 
 ### Optional: a definitive "which commit is live" marker
 
-Entity existence proves *an* automation deployed, not *which commit*. If you
-want a precise answer, add a template sensor whose state is a version string
-bumped in every commit:
+Entity existence proves *an* automation deployed, not *which commit*. For a
+precise answer, add a template sensor whose state is a version string bumped in
+every commit:
 
 ```yaml
 # packages/system.yaml
@@ -111,18 +182,40 @@ template:
   - sensor:
       - name: "Config version"
         unique_id: config_version
-        state: "2026-07-26.1"  # bump this in each commit
+        state: "2026-08-26.1"  # bump this in each commit
 ```
 
 Then `GET /api/states/sensor.config_version` answers the question exactly. The
 cost is remembering to bump it; skip it if you'd rather not.
 
-## 5. Hygiene
+## 6. Hygiene
 
-- Revoke the token any time from the `Claude Verify` user's Security tab —
-  revocation is immediate and breaks nothing else.
-- Rotate it if you ever paste it into a chat, a log, or a commit by accident.
-- Removing `HA_TOKEN` from the environment is the fastest kill switch; the
-  session simply loses the ability to check.
-- Keep this doc token-free. If someone later records the actual URL or token
-  here, that's a leak — they belong in the environment settings only.
+- **Revoke the auth key** from the Tailscale console to cut off new sessions;
+  existing ephemeral nodes disappear on their own when the container dies.
+- **Revoke the HA token** from the `Claude Verify` user's Security tab —
+  immediate, and breaks nothing else.
+- Removing `TS_AUTHKEY` or `HA_TOKEN` from the environment is the fastest kill
+  switch; sessions then simply lose the ability to check.
+- Rotate either if it's ever pasted into a chat, a log, or a commit.
+- Keep this doc credential-free. If someone later records a real key, token, or
+  tailnet address here, that's a leak — those belong in environment settings
+  only.
+
+## Fallback: Nabu Casa
+
+If Tailscale is unavailable, the Nabu Casa remote URL also reaches the box from
+a cloud session. Same token from step 2; differences:
+
+- `HA_BASE_URL` = `https://<random-id>.ui.nabu.casa` (Settings → Home
+  Assistant Cloud → Remote Control), and no Tailscale bootstrap.
+- **A network-policy change is required.** The default policy blocks it — a
+  cloud session gets `000` from `ui.nabu.casa`. The environment's policy must
+  permit outbound to `*.ui.nabu.casa`, or the variables are useless.
+- **It depends on the subscription.** The Nabu Casa account was a trial
+  expiring **2026-08-14** ([09](09-integrations-status.md)); if it lapsed,
+  this path is already dead.
+- No per-port scoping. The token's permissions are the only boundary — the
+  whole HA API is exposed to anything holding it, with no ACL layer beneath.
+
+Don't port-forward 8123 to the internet as a third option. Tailscale and the
+Nabu Casa tunnel both exist so you don't have to.
