@@ -1,0 +1,194 @@
+# Weekday wake-up lighting for Sam's and Hunter's bedrooms.
+#
+# Schedule (weekdays that are not US federal holidays):
+#   Sam    : lamp ramps 5% -> 100% from 05:45 to 06:00, light on at 06:15
+#   Hunter : lamp ramps 5% -> 100% from 06:45 to 07:00, light on at 07:00
+#
+# Entity resolution is by AREA NAME at run time (area_entities accepts a name),
+# because the area IDs predate the "Bedroom 2/3" -> "Hunter's/Sam's Bedroom"
+# rename (docs/09).
+#   "lamp"  = every light.* entity in the area (dimmable, gets the ramp)
+#   "light" = the Tuya smart plug "Sam's Light" / "Hunter's Light" (switch.*);
+#             prefers switches whose entity_id contains "light", else any
+#             switch in the area.
+#
+# The ramp is driven by a once-a-minute time_pattern that recomputes the target
+# brightness from the clock, so an HA restart mid-ramp (Git Pull auto-restarts)
+# just resumes at the right level on the next tick. Empty targets raise a
+# persistent notification instead of failing silently.
+#
+# binary_sensor.us_workday replaces the Workday integration (UI-only config)
+# with a pure template: Mon-Fri and not a US federal holiday, including the
+# Sat->Fri / Sun->Mon observed shifts. Swap for binary_sensor.workday_sensor
+# if the Workday integration is ever added.
+
+template:
+  - binary_sensor:
+      - name: "US Workday"
+        unique_id: us_workday
+        icon: mdi:calendar-check
+        state: >-
+          {% set d = now().date() %}
+          {% set y = d.year %}
+          {% set ns = namespace(h=[]) %}
+          {# nth weekday of month: MLK, Presidents, Labor, Columbus, Thanksgiving #}
+          {% for m, wd, n in [(1, 0, 3), (2, 0, 3), (9, 0, 1), (10, 0, 2), (11, 3, 4)] %}
+            {% set first = d.replace(month=m, day=1).weekday() %}
+            {% set ns.h = ns.h + [(m, 1 + (wd - first) % 7 + 7 * (n - 1))] %}
+          {% endfor %}
+          {# Memorial Day: last Monday of May #}
+          {% set ns.h = ns.h + [(5, 31 - d.replace(month=5, day=31).weekday() % 7)] %}
+          {# fixed dates with observed shift: New Year, Juneteenth, July 4, Veterans, Christmas #}
+          {% for m, day in [(1, 1), (6, 19), (7, 4), (11, 11), (12, 25)] %}
+            {% set wd = d.replace(month=m, day=day).weekday() %}
+            {% set ns.h = ns.h + [(m, day - 1 if wd == 5 else (day + 1 if wd == 6 else day))] %}
+          {% endfor %}
+          {# next New Year on a Saturday is observed Fri Dec 31 of this year #}
+          {% if d.replace(year=y + 1, month=1, day=1).weekday() == 5 %}
+            {% set ns.h = ns.h + [(12, 31)] %}
+          {% endif %}
+          {{ d.weekday() < 5 and (d.month, d.day) not in ns.h }}
+
+script:
+  wake_lamp_ramp:
+    alias: "Wake - lamp ramp step"
+    description: >-
+      Sets every light in an area to the brightness the ramp should be at right
+      now: from_pct at start, to_pct at start + duration minutes, linear between.
+      Call once a minute during the window.
+    mode: parallel
+    fields:
+      area:
+        description: Area name (or id)
+        example: "Sam's Bedroom"
+        required: true
+        selector:
+          text:
+      start:
+        description: Ramp start, HH:MM local time
+        example: "05:45"
+        required: true
+        selector:
+          text:
+      duration:
+        description: Ramp length in minutes
+        default: 15
+        selector:
+          number:
+            min: 1
+            max: 120
+      from_pct:
+        default: 5
+        selector:
+          number:
+            min: 1
+            max: 100
+      to_pct:
+        default: 100
+        selector:
+          number:
+            min: 1
+            max: 100
+    variables:
+      duration: "{{ duration | default(15) }}"
+      from_pct: "{{ from_pct | default(5) }}"
+      to_pct: "{{ to_pct | default(100) }}"
+      lamps: >-
+        {{ area_entities(area) | select('match', 'light\.') | list }}
+      pct: >-
+        {% set elapsed = (now() - today_at(start)).total_seconds() / 60 %}
+        {% set frac = [0, [elapsed / duration, 1] | min] | max %}
+        {{ (from_pct + (to_pct - from_pct) * frac) | round(0) | int }}
+    sequence:
+      - if:
+          - condition: template
+            value_template: "{{ lamps | count > 0 }}"
+        then:
+          - action: light.turn_on
+            target:
+              entity_id: "{{ lamps }}"
+            data:
+              brightness_pct: "{{ pct }}"
+        else:
+          - action: persistent_notification.create
+            data:
+              notification_id: "wake_lamp_ramp_{{ area | slugify }}"
+              title: "Wake-up lamp ramp found no lamp"
+              message: >-
+                No light.* entity resolved for area "{{ area }}". Check the area
+                name and that the lamp is assigned to it (Settings > Areas).
+
+automation:
+  - alias: "Wake - kids' lamp ramps (weekdays)"
+    id: wake_kids_lamp_ramps
+    description: >-
+      Every minute during each kid's 15-minute window, step the lamp toward
+      100%. Sam 05:45-06:00, Hunter 06:45-07:00. Weekdays, not US holidays.
+    mode: queued
+    triggers:
+      - trigger: time_pattern
+        minutes: "/1"
+    conditions:
+      - condition: state
+        entity_id: binary_sensor.us_workday
+        state: "on"
+    actions:
+      - choose:
+          - conditions:
+              - condition: time
+                after: "05:45:00"
+                before: "06:00:30"
+            sequence:
+              - action: script.wake_lamp_ramp
+                data:
+                  area: "Sam's Bedroom"
+                  start: "05:45"
+          - conditions:
+              - condition: time
+                after: "06:45:00"
+                before: "07:00:30"
+            sequence:
+              - action: script.wake_lamp_ramp
+                data:
+                  area: "Hunter's Bedroom"
+                  start: "06:45"
+
+  - alias: "Wake - kids' lights on (weekdays)"
+    id: wake_kids_lights_on
+    description: >-
+      Turn on the kids' bedroom light plugs: Sam at 06:15, Hunter at 07:00.
+      Weekdays, not US holidays.
+    triggers:
+      - trigger: time
+        at: "06:15:00"
+        id: sam
+      - trigger: time
+        at: "07:00:00"
+        id: hunter
+    conditions:
+      - condition: state
+        entity_id: binary_sensor.us_workday
+        state: "on"
+    actions:
+      - variables:
+          area: >-
+            {{ "Sam's Bedroom" if trigger.id == 'sam' else "Hunter's Bedroom" }}
+          switches: >-
+            {% set all = area_entities(area) | select('match', 'switch\.') | list %}
+            {% set named = all | select('search', 'light') | list %}
+            {{ named if named else all }}
+      - if:
+          - condition: template
+            value_template: "{{ switches | count > 0 }}"
+        then:
+          - action: homeassistant.turn_on
+            target:
+              entity_id: "{{ switches }}"
+        else:
+          - action: persistent_notification.create
+            data:
+              notification_id: "wake_light_{{ trigger.id }}"
+              title: "Wake-up light found no switch"
+              message: >-
+                No switch.* entity resolved for area "{{ area }}". Check the area
+                name and that the plug is assigned to it (Settings > Areas).
