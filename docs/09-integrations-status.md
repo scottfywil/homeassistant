@@ -131,6 +131,13 @@ symlinks) · Git pull · Tailscale · Terminal & SSH.
   email (to Scott + Megan via the existing SMTP2GO UI entry) and SMS (existing Twilio
   `notify.alert_sms`) when `binary_sensor.front_door_visitor` fires. Owner pressed the real
   doorbell after deploy — both channels confirmed received.
+- **2026-09-02: camera snapshot attached to the email.** Switched the email action from
+  `notify.send_message` to `smtp.send_message` — the generic action doesn't expose
+  `attachments`, only the SMTP-domain-specific one does (confirmed live via Developer Tools →
+  Actions). Data shape verified against HA's own attachment picker for `camera.front_door_fluent`
+  (see `packages/doorbell_alerts.yaml` header for the exact schema and the HLS-mimetype gotcha).
+  Added `continue_on_error: true` so a snapshot hiccup can't block the SMS action. Awaiting a
+  real doorbell press to confirm the attachment actually arrives.
 
 ### Vivint notes (for the record)
 - Community integration `natekspencer/ha-vivint` (in the **default HACS store**;

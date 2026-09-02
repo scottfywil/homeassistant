@@ -1,10 +1,20 @@
-# Doorbell-press alert: email (SMTP2GO) + SMS (Twilio toll-free).
+# Doorbell-press alert: email (SMTP2GO, with a camera snapshot attached) +
+# SMS (Twilio toll-free).
 #
 # Reuses the existing notifiers — does NOT redeclare `twilio:` or a
 # `platform: twilio_sms` notifier (that's owned by packages/cabinet_alerts.yaml;
-# only one `twilio:` key is allowed). Email likewise goes through the existing
-# UI SMTP config entry via notify.send_message (see packages/garage_alerts.yaml
-# for why there's no `platform: smtp` block here).
+# only one `twilio:` key is allowed).
+#
+# Email action is `smtp.send_message`, NOT the generic `notify.send_message` —
+# the generic action only exposes title/message; `attachments` is an extra
+# field the smtp integration registers only under its own domain action.
+# Confirmed live in Developer Tools → Actions 2026-09-02: picking the
+# "Front Door Fluent" camera as an attachment auto-fills the `media_source`
+# block below (HA resolves a `media-source://camera/...` reference to a fresh
+# camera.async_get_image() snapshot at send time — NOT a live-stream clip,
+# despite the HLS media_content_type, which is just the camera's normal
+# browse-listing type). `continue_on_error` on this step means a snapshot
+# hiccup (e.g. a slow/unreachable camera) still lets the SMS action fire.
 #
 # Sensor: Reolink `reolink` integration, device "Front Door" (Video Doorbell
 # WiFi D340W) → Entryway. binary_sensor.front_door_visitor is the button-press
@@ -24,7 +34,8 @@ automation:
         from: "off"
         to: "on"
     actions:
-      - action: notify.send_message
+      - action: smtp.send_message
+        continue_on_error: true
         target:
           entity_id:
             - notify.garage_alert_email_swilson_hubwisetech_com
@@ -34,6 +45,11 @@ automation:
           message: >-
             The Front Door doorbell was pressed —
             {{ now().strftime('%b %-d, %-I:%M %p') }}.
+          attachments:
+            - media_source:
+                media_content_id: media-source://camera/camera.front_door_fluent
+                media_content_type: application/vnd.apple.mpegurl
+              filename: front_door_snapshot.jpg
       - action: notify.alert_sms
         data:
           message: >-

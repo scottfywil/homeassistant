@@ -85,9 +85,13 @@ Twilio `notify.alert_sms`) when `binary_sensor.front_door_visitor` fires.
 No new secrets needed. Verified with a real doorbell press — both channels
 received.
 
-Possible follow-ups, not built: attaching a camera snapshot to the
-notification (`camera.snapshot` service, since Reolink's push includes a
-still image), or a mobile-app push if the HA Companion app gets installed.
+**✅ Camera snapshot attached to the email, 2026-09-02** — added via
+`smtp.send_message`'s `attachments` field targeting
+`camera.front_door_fluent` (see the package header for the exact schema).
+Not yet confirmed by a real press.
+
+Possible follow-up, not built: a mobile-app push if the HA Companion app
+gets installed.
 
 ## Gotchas
 
