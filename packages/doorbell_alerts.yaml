@@ -1,0 +1,45 @@
+# Doorbell-press alert: email (SMTP2GO) + SMS (Twilio toll-free).
+#
+# Reuses the existing notifiers — does NOT redeclare `twilio:` or a
+# `platform: twilio_sms` notifier (that's owned by packages/cabinet_alerts.yaml;
+# only one `twilio:` key is allowed). Email likewise goes through the existing
+# UI SMTP config entry via notify.send_message (see packages/garage_alerts.yaml
+# for why there's no `platform: smtp` block here).
+#
+# Sensor: Reolink `reolink` integration, device "Front Door" (Video Doorbell
+# WiFi D340W) → Entryway. binary_sensor.front_door_visitor is the button-press
+# sensor (momentary — fires "on" briefly, no "all-clear" needed, unlike the
+# garage/cabinet open-sensor alerts). Verified live 2026-09-01 — see
+# docs/09-integrations-status.md "Reolink note" and docs/11-reolink-doorbell.md.
+#
+# Audience: Scott + Megan (both), matching the cabinet package's household
+# audience rather than the garage package's Scott-only ops audience — a
+# doorbell press is a whole-household concern.
+automation:
+  - alias: "Doorbell - Front Door pressed"
+    id: doorbell_front_door_pressed
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.front_door_visitor
+        from: "off"
+        to: "on"
+    actions:
+      - action: notify.send_message
+        target:
+          entity_id:
+            - notify.garage_alert_email_swilson_hubwisetech_com
+            - notify.garage_alert_email_megan
+        data:
+          title: "Someone's at the front door"
+          message: >-
+            The Front Door doorbell was pressed —
+            {{ now().strftime('%b %-d, %-I:%M %p') }}.
+      - action: notify.alert_sms
+        data:
+          message: >-
+            HubWise Ops Alert: Facility sensor 'Front Door' doorbell pressed —
+            {{ now().strftime('%b %-d, %-I:%M %p') }}.
+            Reply HELP for help or STOP to opt out.
+          target:
+            - !secret alert_sms_scott
+            - !secret alert_sms_wife
