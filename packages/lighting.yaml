@@ -28,3 +28,38 @@ automation:
       - action: light.turn_off
         target:
           entity_id: light.office
+
+  # Kids' rooms: everything light-like off at 8:00 AM daily. The kids' lamps
+  # are Tuya smart PLUGS ("Sam's Light" / "Hunter's Light" -> switch.*), so
+  # light.turn_off alone would miss them; homeassistant.turn_off covers both
+  # domains. Areas are resolved by NAME at run time (area_entities accepts a
+  # name) because the area IDs predate the Bedroom 2/3 rename (docs/09).
+  - alias: "Lighting - Kids' rooms off at 8:00 AM"
+    id: lighting_kids_rooms_off_0800
+    description: >-
+      Every day at 8:00 AM turn off all lights and smart plugs in Sam's Bedroom
+      and Hunter's Bedroom. Raises a persistent notification if the areas
+      resolve to nothing, so a rename can't fail silently.
+    triggers:
+      - trigger: time
+        at: "08:00:00"
+    actions:
+      - variables:
+          targets: >-
+            {{ (area_entities("Sam's Bedroom") + area_entities("Hunter's Bedroom"))
+               | select('match', '(light|switch)\.') | list }}
+      - if:
+          - condition: template
+            value_template: "{{ targets | count > 0 }}"
+        then:
+          - action: homeassistant.turn_off
+            target:
+              entity_id: "{{ targets }}"
+        else:
+          - action: persistent_notification.create
+            data:
+              notification_id: lighting_kids_rooms_off_0800
+              title: "Kids' rooms 8 AM lights-off found nothing"
+              message: >-
+                No light or switch entities resolved for areas "Sam's Bedroom" or
+                "Hunter's Bedroom". Check the area names under Settings > Areas.
