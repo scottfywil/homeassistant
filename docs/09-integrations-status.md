@@ -774,8 +774,82 @@ TASK B — After TFV APPROVED, build the cabinet-alert automation:
 Start by reading docs/09, then confirm Twilio's current console state before acting.
 ```
 
+## Frigate NVR — requested 2026-09-02, deliberately deferred to a fresh session
+
+Owner asked to install and configure **Frigate** as an NVR on this HA box. Not started here —
+by the owner's own choice, to run it in a clean session (this one had already spent its context
+on the Reolink doorbell work). Real open questions before this should proceed, not yet answered:
+
+- **This box is an HP EliteDesk 800 G3 Desktop Mini, 512 GB total disk** (bare metal, wiped
+  Windows — see README/design spec), the SAME drive HAOS, the recorder DB, Zigbee2MQTT, and
+  daily encrypted backups already live on. Continuous NVR recording competes for that one disk.
+  **Check actual free space (Settings → System → Storage) before picking a retention policy.**
+- **Likely no PCIe slot and no discrete GPU** (small-form-factor desktop) — a Coral **PCIe** TPU
+  almost certainly won't fit; a Coral **USB** TPU would need to be bought (a real purchase
+  decision for the owner, not assumed). CPU-only ML object detection is heavy and risks
+  degrading the whole HA instance the household depends on (Zigbee automations, alerts, etc.) —
+  confirm CPU/RAM headroom first, and check whether the box's Intel iGPU can be passed through
+  for hardware-accelerated **decoding** at least (separate from ML detection).
+- **Camera inventory reality check:** the only camera confirmed to expose local RTSP right now
+  is the **Reolink Front Door doorbell** (see the Reolink note above; same admin credentials
+  already used for the `reolink` HA integration; Reolink doorbell RTSP is typically
+  `rtsp://<user>:<pass>@<ip>:554/h264Preview_01_main` / `..._sub`, but confirm the doorbell's
+  actual LAN IP first). **Vivint cameras are cloud-only** via the read-only `natekspencer/
+  ha-vivint` integration and the **Nest garage camera is cloud/SDM** — neither has a confirmed
+  local RTSP path, so Frigate's real starting scope is probably just the one doorbell, not
+  "all cameras," unless that's separately investigated.
+- Install path: Frigate's own HAOS add-on (community add-ons repo) is the obvious route since
+  there's no separate device to run Docker on — but confirm it supports this box's hardware
+  passthrough needs before assuming it's a clean turnkey install.
+- This directly reverses a documented decision: `docs/superpowers/specs/2026-07-07-home-automation-system-design.md`
+  lists "Camera/NVR (Frigate) — future project" under **Out of scope**. That's the owner's call
+  to make now, not a blocker — just update that doc once Frigate is actually live.
+
+### Handoff prompt (paste into a fresh session)
+
+```
+Install and configure Frigate as an NVR on the Home Assistant box for this repo
+(github.com/scottfywil/homeassistant; local clone
+C:\Users\scottyfwil\Documents\Claude\Projects\homeassistant; GitOps — push to
+main and the Git Pull add-on deploys to /config on the box; HA reachable at
+http://homeassistant.local:8123 or via Tailscale homeassistant.taile3ed95.ts.net).
+
+READ FIRST: docs/09-integrations-status.md "Frigate NVR" section (this one) for
+full context, plus docs/11-reolink-doorbell.md and the "Reolink note" in docs/09
+for the one camera currently confirmed to have local RTSP access.
+
+Before installing anything, verify feasibility on the actual box (HP EliteDesk
+800 G3 Desktop Mini, 512 GB total disk shared with HAOS/recorder/Zigbee2MQTT/
+backups, likely no PCIe slot or discrete GPU):
+1. Check free disk space (Settings -> System -> Storage) and CPU/RAM (Settings ->
+   System -> Hardware) live via the HA UI (drive with Claude in Chrome or the
+   in-app browser, logged in) before committing to a retention policy.
+2. Confirm whether the box has a spare USB port and whether the owner wants to
+   buy a Coral USB TPU (real purchase decision -- ask, don't assume) versus
+   running CPU-only detection, and check whether the Intel iGPU can be passed
+   through for hardware-accelerated video decoding either way.
+3. Confirm the Reolink Front Door doorbell's actual LAN IP (check the `reolink`
+   config entry or the Reolink app) and reuse its existing local admin
+   credentials for the RTSP stream -- don't create new ones.
+4. Scope the initial build to just that one doorbell camera. Vivint cameras
+   (cloud-only, read-only integration) and the Nest garage camera (cloud/SDM)
+   do NOT have a confirmed local RTSP path -- don't assume they can be added
+   without separately investigating that.
+5. Recommend detection-based recording (not continuous 24/7) with a conservative
+   retention window (e.g. 7-14 days) to start, given the shared disk -- revisit
+   once real disk usage is observed.
+
+Report the hardware/storage findings and a concrete plan back before installing,
+since this reverses a documented "out of scope" decision in
+docs/superpowers/specs/2026-07-07-home-automation-system-design.md (fine to
+reverse -- it's the owner's call -- but flag it and update that doc once Frigate
+is live).
+```
+
 ## Not yet started
 
 - ESP32 presence sensors — parts not yet ordered ([08-presence-sensors.md](08-presence-sensors.md)).
 - More `packages/` automations. Live so far: office-lighting (starter), `garage_alerts.yaml`,
   `workout_prusa_lamp.yaml`. Staged (gated on Twilio TFV): `cabinet_alerts.yaml` (PR #1).
+- **Frigate NVR** — requested 2026-09-02, deliberately deferred to a fresh session. See the
+  "Frigate NVR" section above for the handoff prompt and open feasibility questions.
