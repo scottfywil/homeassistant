@@ -774,98 +774,110 @@ TASK B — After TFV APPROVED, build the cabinet-alert automation:
 Start by reading docs/09, then confirm Twilio's current console state before acting.
 ```
 
-## Frigate NVR — requested 2026-09-02, deliberately deferred to a fresh session
+## Frigate NVR — DECIDED 2026-09-02: dedicated box, not the G3 (not yet installed)
 
-Owner asked to install and configure **Frigate** as an NVR. Not started here — by the owner's
-own choice, to run it in a clean session. **Scope narrowed 2026-09-02: the next session is a
-hardware-deployment INVESTIGATION, not an install.** Deliverable is a recommendation — run on
-the existing G3 box vs. offload to a separate box with a GPU — not a running Frigate instance.
-Real open questions to resolve, not yet answered:
+**Owner decision 2026-09-02, after the hardware investigation below:** Frigate runs on a
+**separate spare 9th-gen Intel i5 HP micro (32 GB RAM, 512 GB NVMe)** as a standalone Docker
+install, with recordings on an **NFS share from the QNAP TS-653A**. HA stays on the G3 untouched
+(migrating HA to the newer box was considered and rejected — same iGPU generation, real downtime,
+no gain). Camera plan: **doorbell only for ~6 months, then 3–8 local cameras long term** — the
+range where a dedicated box pays off and a UHD 630 via OpenVINO still needs no accelerator.
+Runbook: [12-frigate-nvr.md](12-frigate-nvr.md). Design spec amended same day.
 
-- **This box is an HP EliteDesk 800 G3 Desktop Mini, 512 GB total disk** (bare metal, wiped
-  Windows — see README/design spec), the SAME drive HAOS, the recorder DB, Zigbee2MQTT, and
-  daily encrypted backups already live on. Continuous NVR recording competes for that one disk.
-  **Check actual free space (Settings → System → Storage) and CPU/RAM (Settings → System →
-  Hardware) live via the HA UI before evaluating this option.**
-- **Likely no PCIe slot and no discrete GPU** (small-form-factor desktop) — a Coral **PCIe** TPU
-  almost certainly won't fit; a Coral **USB** TPU would need to be bought (a real purchase
-  decision for the owner, not assumed). CPU-only ML object detection is heavy and risks
-  degrading the whole HA instance the household depends on (Zigbee automations, alerts, etc.).
-  Check whether the box's Intel iGPU can be passed through for hardware-accelerated
-  **decoding** at least (separate from ML detection) as a middle option.
-- **The GPU-offload alternative is genuinely unexplored** — no second box, GPU, or budget has
-  been identified yet. The investigation needs to surface real options (does the household
-  already own any spare PC/GPU hardware? what would a dedicated small box with a modest GPU or
-  Coral cost new/used?) and weigh them against just running detection-light/CPU-only or
-  Coral-USB-assisted on the G3 — not just default to "buy a separate box" without checking
-  whether the G3 can handle a single doorbell camera's load acceptably first.
-- **Camera inventory reality check:** the only camera confirmed to expose local RTSP right now
-  is the **Reolink Front Door doorbell** (see the Reolink note above; same admin credentials
-  already used for the `reolink` HA integration; Reolink doorbell RTSP is typically
-  `rtsp://<user>:<pass>@<ip>:554/h264Preview_01_main` / `..._sub`, but confirm the doorbell's
-  actual LAN IP first). **Vivint cameras are cloud-only** via the read-only `natekspencer/
-  ha-vivint` integration and the **Nest garage camera is cloud/SDM** — neither has a confirmed
-  local RTSP path, so the hardware sizing question is really "one camera today, how many
-  later" — worth asking the owner if more local cameras are planned, since that changes the
-  GPU-vs-G3 tradeoff a lot.
-- This directly reverses a documented decision: `docs/superpowers/specs/2026-07-07-home-automation-system-design.md`
-  lists "Camera/NVR (Frigate) — future project" under **Out of scope**. That's the owner's call
-  to make now, not a blocker — just update that doc once a deployment decision is made.
+### Investigation record (2026-09-02)
 
-### Handoff prompt (paste into a fresh session)
+### What the G3 actually is (measured live 2026-09-02)
 
-```
-Investigate hardware deployment options for running Frigate as an NVR for the
-Home Assistant setup in this repo (github.com/scottfywil/homeassistant; local
-clone C:\Users\scottyfwil\Documents\Claude\Projects\homeassistant; GitOps --
-push to main and the Git Pull add-on deploys to /config on the box; HA
-reachable at http://homeassistant.local:8123 or via Tailscale
-homeassistant.taile3ed95.ts.net).
+| Item | Measured |
+|---|---|
+| CPU | Intel Core **i7-6700T** @ 2.80 GHz, 4C/8T (Skylake, 35 W) — iGPU is **Intel HD Graphics 530** |
+| RAM | 7.8 GB total, **1.7 GB used**, ~6.0 GB available |
+| CPU load | ~0% in the HA graph; `/proc/loadavg` 0.03 |
+| Disk | 468.7 GB data disk, **30.6 GB used, 438.1 GB free** (System 29.5, Backups 0.7, HA 0.4); SSD lifetime 6% used |
+| iGPU exposure | `/dev/dri/card0` + `/dev/dri/renderD128` present in HAOS (System hardware tab + `ls /dev/dri`) |
+| OS | HAOS 18.2, kernel 6.18.39-haos, Core 2026.8.2 |
+| Expansion | **No PCIe slot.** One M.2 2280 NVMe (the boot disk), one **empty 2.5" SATA bay**, one M.2 2230 A/E WLAN slot (HP support: WLAN cards only — a Coral M.2 A+E is *not* recognized). 7× USB 3.0 |
+| LAN | HA box `172.16.105.160/24`; doorbell `172.16.105.106` — same subnet |
 
-SCOPE: this is a research/recommendation task, NOT an install. Deliverable is
-a clear recommendation -- run Frigate in place on the existing HA box vs. move
-it to a separate box with a GPU -- with the reasoning and real numbers behind
-it. Do not install Frigate yet.
+### Camera reality
 
-READ FIRST: docs/09-integrations-status.md "Frigate NVR" section (this one) for
-full context, plus docs/11-reolink-doorbell.md and the "Reolink note" in docs/09
-for the one camera currently confirmed to have local RTSP access.
+- Only one camera has a local stream today: **Reolink Video Doorbell WiFi (D340W)**, "Front Door",
+  **LAN IP 172.16.105.106** (from the device page "Visit" link), firmware v3.0.0.4662. Main stream
+  2560×1920 H.264, default 20 fps at **4096 kbps** (adjustable 1024–6144); "Fluent" sub stream is
+  low-res and what `camera.front_door_fluent` already uses. **RTSP/ONVIF must be enabled in the
+  Reolink app** (Device Settings → Advanced Network Settings → Server Settings) before Frigate
+  can pull it; Frigate's Reolink guidance is to feed go2rtc the **http-flv** main stream and
+  detect on the sub stream.
+- Vivint cameras are cloud-only, Nest garage camera is cloud/SDM — no local RTSP path for either.
 
-Investigate:
-1. Current box reality: HP EliteDesk 800 G3 Desktop Mini, 512 GB total disk
-   shared with HAOS/recorder/Zigbee2MQTT/backups, likely no PCIe slot or
-   discrete GPU. Check actual free disk space (Settings -> System -> Storage)
-   and CPU/RAM/current load (Settings -> System -> Hardware) live via the HA UI
-   (drive with Claude in Chrome or the in-app browser, logged in).
-2. What running Frigate ON the G3 would realistically look like for just the
-   one Reolink doorbell camera today: CPU-only detection load, whether a Coral
-   USB TPU (a real purchase the owner would need to approve, don't assume it)
-   changes that meaningfully, and whether the Intel iGPU can be passed through
-   for hardware-accelerated decoding as a middle option.
-3. What a separate dedicated box would actually cost and look like -- ask the
-   owner whether any spare PC/GPU hardware already exists in the household
-   before assuming a new purchase; if researching new hardware, ground it in
-   real current prices for a small NVR-capable box (e.g. a used/budget mini PC
-   with a modest GPU, or a Coral-equipped low-power box) rather than guessing.
-4. Ask the owner whether more local cameras are planned beyond the one
-   doorbell -- one camera vs. several changes which option makes sense.
-5. Confirm the Reolink Front Door doorbell's actual LAN IP (check the
-   `reolink` config entry or the Reolink app) so whichever option is chosen
-   has a concrete next step ready.
+### What each option really costs
 
-Report back with a recommendation and the reasoning -- don't proceed to
-install Frigate anywhere until that recommendation is discussed. This also
-reverses a documented "out of scope" decision in
-docs/superpowers/specs/2026-07-07-home-automation-system-design.md (fine to
-reverse -- it's the owner's call -- but flag it and update that doc once a
-deployment path is chosen).
-```
+**Option A — Frigate add-on on the G3, iGPU-accelerated (recommended for 1–4 cameras).**
+- Frigate's own docs list OpenVINO on 6th-gen+ Intel; **HD 530 ≈ 15–35 ms inference**, one
+  detector instance → roughly 28–66 detections/s of budget. One doorbell at 5 fps detect uses a
+  small fraction of that; docs peg this class of iGPU at "2–4 cameras comfortably".
+- The official Frigate add-on already maps `/dev/dri/renderD128`, `/dev/dri/card0`, `usb: true`
+  and `/media`; HAOS only lacks AMD mesa and Intel NPU firmware, so Intel iGPU VAAPI decode +
+  OpenVINO detect is the supported path. Some 6th–8th-gen users leave `hwaccel_args` empty and
+  keep only the detector on GPU — expect a little tuning.
+- **Cost: $0.** CPU-only detection would also cope with one camera on 4 cores, but Frigate
+  explicitly says CPU detection "is not recommended in any setup" — use the iGPU.
+- **Disk math (the real constraint):** 1 Mbps continuous ≈ 10.8 GB/day, so the doorbell's
+  4 Mbps main stream ≈ **44 GB/day** if recorded 24/7 (≈1.3 TB/month — not viable on this disk).
+  Plan for **motion/event-only recording** or continuous ≤3 days (~130 GB) with Frigate's
+  retention cap set around 150–200 GB, leaving >200 GB headroom for HAOS/recorder/backups.
+- **Risk:** continuous NVR writes share the boot SSD with everything the house depends on.
+  Mitigation if it grows: the **empty 2.5" SATA bay** — HAOS "Move data disk" / separate media
+  storage lands there; a 2 TB 2.5" SATA SSD is **~$266** right now (Crucial BX500 at Newegg —
+  flash is expensive in 2026), or use network storage (HAOS supports it; the parked EISI-NAS01
+  at 192.168.7.10 is on a different subnet today).
+
+**Option B — Coral USB TPU on the G3.** ~**$81–111** (welectron €80.90, Seeed $111). Frigate
+docs now say the Coral is "**no longer recommended for new Frigate installations**"; Google
+archived the `google-coral/edgetpu` repo on **2026-04-19** and the PCIe `gasket` driver hasn't
+built on kernels >6.2 without community patches. The *USB* Coral needs no kernel driver so it
+would still work on kernel 6.18, but it buys nothing the HD 530 doesn't already give for 1–4
+cameras. **Skip unless the iGPU path fails in practice.**
+
+**Option C — separate dedicated box.** Grounded prices, 2026-09-02:
+- Refurb enterprise micro: **Dell OptiPlex 7060 Micro i5-8500T/16 GB/256 GB ≈ $196**; OptiPlex
+  3070 Micro i5-9500T/16 GB/512 GB **$339.99** (Newegg, ReUse Computers); Lenovo M720q ≈ $220.
+  8th-gen UHD 630 via OpenVINO handles ~6 cameras. **No GPU needed.**
+- New N100 mini PC: Beelink S12 Pro 16 GB/500 GB **$339** (Frigate's own "several 1080p cameras"
+  pick; out of stock at Newegg, buy from Amazon/Beelink); Beelink EQ13 out of stock, EQ14 (N150)
+  has known Frigate issues — avoid.
+- "Modest GPU" tier: Intel Arc A310 low-profile ≈ **$135–220** (out of stock at Newegg) plus a
+  SFF host with a PCIe slot (~$150–250 refurb) → **$300–450 before disks**, higher idle power.
+  Frigate's 2026 guidance reserves discrete GPUs for 12+ cameras or Frigate+ GenAI/semantic
+  search; it warns the power bill exceeds a mini PC's annual cost.
+- Any option C still needs its own recording disk and adds a second box to patch/back up.
+
+### Recommendation
+
+**Run Frigate on the G3 now (Option A). Buy nothing.** One WiFi doorbell is far inside what the
+i7-6700T + HD 530 handle, the box is idle, 6 GB RAM is free, and 438 GB of disk covers event
+recording for one camera. Revisit only if (a) more than ~4 local cameras get added or (b) the
+owner wants Frigate+ GenAI/semantic search — then a **~$200 refurb 8th-gen micro** is the right
+second box, not a GPU build. If continuous recording is wanted, add a 2.5" SATA drive first.
+
+**Open questions for the owner (answer before install):**
+1. Any spare PC/GPU already in the house? (Changes Option C from "buy" to "free".)
+2. Are more *local* (RTSP-capable) cameras planned beyond the doorbell, and how many?
+3. Event-only recording (fits today) vs continuous (needs the second drive)?
+
+**Concrete next step once approved:** enable RTSP/ONVIF on the doorbell in the Reolink app, add
+the Frigate add-on repo, configure go2rtc http-flv for `172.16.105.106`, detector `openvino`
+device `GPU`, `hwaccel_args: preset-vaapi`, event-only `record` with a retention cap, then
+install the HACS Frigate integration.
+
+**Design-spec flag:** `docs/superpowers/specs/2026-07-07-home-automation-system-design.md`
+still lists "Camera/NVR (Frigate) — future project" under **Out of scope**. Proceeding reverses
+that; amend the spec (dated) when the deployment path is confirmed.
 
 ## Not yet started
 
 - ESP32 presence sensors — parts not yet ordered ([08-presence-sensors.md](08-presence-sensors.md)).
 - More `packages/` automations. Live so far: office-lighting (starter), `garage_alerts.yaml`,
   `workout_prusa_lamp.yaml`. Staged (gated on Twilio TFV): `cabinet_alerts.yaml` (PR #1).
-- **Frigate NVR** — requested 2026-09-02, deliberately deferred to a fresh session. Scope
-  narrowed same day to a hardware-deployment investigation (G3 in place vs. separate GPU box)
-  before any install. See the "Frigate NVR" section above for the handoff prompt.
+- **Frigate NVR** — decided 2026-09-02: dedicated spare 9th-gen HP micro + QNAP NFS, HA stays
+  on the G3. Not installed yet. Runbook [12-frigate-nvr.md](12-frigate-nvr.md).

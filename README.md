@@ -51,6 +51,7 @@ Follow the runbooks in order:
 9. [Integrations status (living doc)](docs/09-integrations-status.md)
 10. [Remote verification from a cloud Claude session](docs/10-remote-verification.md)
 11. [Reolink doorbell](docs/11-reolink-doorbell.md)
+12. [Frigate NVR on a dedicated box](docs/12-frigate-nvr.md)
 
 ## Secrets
 
