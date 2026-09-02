@@ -126,9 +126,11 @@ symlinks) · Git pull · Tailscale · Terminal & SSH.
   - **Basement Chime** → **Rec Room** — a paired Reolink Chime accessory.
   - **Upstairs Chime** (renamed from the default "Reolink Chime" 2026-09-01) → **Upstairs
     Hallway** — a second paired Reolink Chime accessory.
-- **Not yet built:** a doorbell-press notification automation (`packages/` PR, same shape
-  as `garage_alerts.yaml`/`cabinet_alerts.yaml`) keying off `binary_sensor.front_door_visitor`
-  — see the "After it's live" section of runbook 11.
+- ✅ **Doorbell-press notification LIVE-TESTED 2026-09-01** — `packages/doorbell_alerts.yaml`
+  (same shape as `garage_alerts.yaml`/`cabinet_alerts.yaml`, no new secrets needed) sends
+  email (to Scott + Megan via the existing SMTP2GO UI entry) and SMS (existing Twilio
+  `notify.alert_sms`) when `binary_sensor.front_door_visitor` fires. Owner pressed the real
+  doorbell after deploy — both channels confirmed received.
 
 ### Vivint notes (for the record)
 - Community integration `natekspencer/ha-vivint` (in the **default HACS store**;

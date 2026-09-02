@@ -79,13 +79,15 @@ than the cloud pattern (Vivint, Nest, Tuya) — no account, no OAuth.
 
 ## After it's live: automation ideas
 
-Once the `_visitor` binary_sensor is confirmed working, a doorbell-press
-notification is a natural `packages/` PR — same shape as
-`garage_alerts.yaml` / `cabinet_alerts.yaml` (email via the existing SMTP
-config entry, optionally SMS via the existing Twilio `notify.alert_sms`, or
-a mobile-app push if the HA Companion app gets installed). Consider
-attaching a camera snapshot to the notification (`camera.snapshot` service)
-since Reolink's push includes a still image.
+**✅ Built + live-tested 2026-09-01** — `packages/doorbell_alerts.yaml` sends
+email (Scott + Megan, via the existing SMTP config entry) and SMS (existing
+Twilio `notify.alert_sms`) when `binary_sensor.front_door_visitor` fires.
+No new secrets needed. Verified with a real doorbell press — both channels
+received.
+
+Possible follow-ups, not built: attaching a camera snapshot to the
+notification (`camera.snapshot` service, since Reolink's push includes a
+still image), or a mobile-app push if the HA Companion app gets installed.
 
 ## Gotchas
 
