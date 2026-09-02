@@ -797,12 +797,13 @@ Runbook: [12-frigate-nvr.md](12-frigate-nvr.md). Design spec amended same day.
 | iGPU exposure | `/dev/dri/card0` + `/dev/dri/renderD128` present in HAOS (System hardware tab + `ls /dev/dri`) |
 | OS | HAOS 18.2, kernel 6.18.39-haos, Core 2026.8.2 |
 | Expansion | **No PCIe slot.** One M.2 2280 NVMe (the boot disk), one **empty 2.5" SATA bay**, one M.2 2230 A/E WLAN slot (HP support: WLAN cards only — a Coral M.2 A+E is *not* recognized). 7× USB 3.0 |
-| LAN | HA box `172.16.105.160/24`; doorbell `172.16.105.106` — same subnet |
+| LAN | HA box `172.16.105.160/24`; doorbell `172.16.105.106` (**DHCP lease** — to be made fixed before install) — same subnet |
 
 ### Camera reality
 
 - Only one camera has a local stream today: **Reolink Video Doorbell WiFi (D340W)**, "Front Door",
-  **LAN IP 172.16.105.106** (from the device page "Visit" link), firmware v3.0.0.4662. Main stream
+  **LAN IP 172.16.105.106 today, DHCP-assigned** (from the device page "Visit" link; owner will
+  reserve/fix it before the install), firmware v3.0.0.4662. Main stream
   2560×1920 H.264, default 20 fps at **4096 kbps** (adjustable 1024–6144); "Fluent" sub stream is
   low-res and what `camera.front_door_fluent` already uses. **RTSP/ONVIF must be enabled in the
   Reolink app** (Device Settings → Advanced Network Settings → Server Settings) before Frigate
@@ -866,7 +867,7 @@ second box, not a GPU build. If continuous recording is wanted, add a 2.5" SATA 
 3. Event-only recording (fits today) vs continuous (needs the second drive)?
 
 **Concrete next step once approved:** enable RTSP/ONVIF on the doorbell in the Reolink app, add
-the Frigate add-on repo, configure go2rtc http-flv for `172.16.105.106`, detector `openvino`
+the Frigate add-on repo, configure go2rtc http-flv for the doorbell's fixed IP, detector `openvino`
 device `GPU`, `hwaccel_args: preset-vaapi`, event-only `record` with a retention cap, then
 install the HACS Frigate integration.
 

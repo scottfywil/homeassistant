@@ -5,7 +5,7 @@
 ## Decision and why
 
 Frigate runs on a **spare 9th-gen Intel Core i5 HP micro** (32 GB RAM, 512 GB NVMe,
-Intel UHD 630 iGPU) as a standalone Docker install on Debian. Home Assistant stays on
+Intel UHD 630 iGPU) as a standalone Docker install on Ubuntu Server. Home Assistant stays on
 the EliteDesk 800 G3 exactly as it is. Recordings go to an **NFS share on the QNAP
 TS-653A**. Investigation numbers live in
 [09-integrations-status.md](09-integrations-status.md) "Frigate NVR"; the short version:
@@ -39,22 +39,30 @@ TS-653A**. Investigation numbers live in
 2. **QNAP NFS share.** Create a volume/folder `frigate` (~2 TB), enable **NFS** (Control Panel →
    Network & File Services → NFS service), and grant the Frigate box's IP read/write. Prefer NFS
    over SMB — Frigate handles NFS more reliably.
-3. **Doorbell RTSP.** Reolink app → Front Door → Device Settings → device-info row → **Advanced
-   Network Settings → Server Settings → enable RTSP and ONVIF.** Doorbell IP is
-   **172.16.105.106** (HA box is 172.16.105.160, same /24). Optional: set the main stream to
-   *fluency-first* bitrate mode and *Interframe Space 1x* (Frigate's Reolink guidance).
-4. **Static/reserved IPs** for the Frigate box and the doorbell in the router's DHCP.
+3. **Doorbell IP first, then RTSP.** The doorbell is on a **DHCP lease today (172.16.105.106
+   as of 2026-09-02)** — owner will move it to a fixed/reserved address at the start of the
+   install session. Do that *before* anything references it, then re-check the HA `reolink`
+   config entry still connects (HA auto-discovered it by mDNS, so a changed IP may need the
+   entry reconfigured). Then Reolink app → Front Door → Device Settings → device-info row →
+   **Advanced Network Settings → Server Settings → enable RTSP and ONVIF.** HA box is
+   172.16.105.160, same /24. Optional: set the main stream to *fluency-first* bitrate mode and
+   *Interframe Space 1x* (Frigate's Reolink guidance).
+4. **Static/reserved IP** for the Frigate box too, in the router's DHCP.
 5. **MQTT credentials.** The Mosquitto add-on on HA is already running for Zigbee2MQTT
    ([02-addons.md](02-addons.md)). Create a dedicated `frigate` MQTT user in the Mosquitto
    add-on config (type it in the HA UI; never paste it into chat or a file).
 
 ## Install (on the 9th-gen box)
 
-1. **OS:** Debian 12 netinst, minimal, SSH server only. Static IP. Enable unattended-upgrades.
-2. **Intel GPU:** `apt install intel-media-va-driver-non-free intel-gpu-tools vainfo` and confirm
-   `vainfo` lists H.264 decode; confirm `/dev/dri/renderD128` exists. Add the Docker user to the
+1. **OS:** **Ubuntu Server 24.04 LTS** (owner's choice), minimal install, OpenSSH server only,
+   **do not** tick the Docker snap in the installer. Static IP via netplan. Enable
+   unattended-upgrades (on by default on Ubuntu Server).
+2. **Intel GPU:** `apt install intel-media-va-driver-non-free intel-gpu-tools vainfo` (Ubuntu
+   ships it in *restricted*/*multiverse*, enabled by default on Server) and confirm `vainfo`
+   lists H.264 decode; confirm `/dev/dri/renderD128` exists. Add the Docker user to the
    `render` and `video` groups.
-3. **Docker:** install Docker Engine + compose plugin from Docker's apt repo.
+3. **Docker:** install Docker Engine + compose plugin from **Docker's apt repo**, not the
+   `docker.io` package or the snap — the snap's confinement breaks `/dev/dri` and NFS binds.
 4. **NFS mount:** `apt install nfs-common`; mount the QNAP share at `/mnt/frigate` via
    `/etc/fstab` with `_netdev,nofail` so a NAS outage does not hang boot. Frigate's DB stays on
    the local NVMe (`/opt/frigate/config`), only `/media/frigate` maps to the share.
@@ -70,8 +78,9 @@ TS-653A**. Investigation numbers live in
    - `detectors: ov: {type: openvino, device: GPU}` (default SSDLite MobileNet v2 model).
    - `ffmpeg: hwaccel_args: preset-vaapi`.
    - `go2rtc:` Reolink **http-flv** main stream
-     (`ffmpeg:http://172.16.105.106/flv?port=1935&app=bcs&stream=channel0_main.bcs&user=...&password=...#video=copy#audio=copy#audio=opus`)
-     plus the RTSP sub stream `rtsp://...@172.16.105.106:554/h264Preview_01_sub` for detect.
+     (`ffmpeg:http://<doorbell-ip>/flv?port=1935&app=bcs&stream=channel0_main.bcs&user=...&password=...#video=copy#audio=copy#audio=opus`)
+     plus the RTSP sub stream `rtsp://...@<doorbell-ip>:554/h264Preview_01_sub` for detect
+     (`<doorbell-ip>` = the fixed address assigned in Prerequisites step 3).
    - `cameras: front_door:` detect on the sub stream (~640×480 @ 5 fps), record from the go2rtc
      main restream; `record: enabled, retain days 7 mode motion; alerts/detections retain 30`.
      Continuous recording is optional and affordable at one camera on 2 TB — owner's call.

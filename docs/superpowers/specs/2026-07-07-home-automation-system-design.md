@@ -135,7 +135,7 @@ encryption key, OTA password, MQTT credentials, latitude/longitude/elevation.
 - DIY AWS Lambda Alexa skill (Nabu Casa chosen)
 - ~~Camera/NVR (Frigate) — future project~~ **Amended 2026-09-02 (owner decision):**
   Frigate is now in scope, deployed on a **separate dedicated box** (spare 9th-gen
-  Intel i5 HP micro, 32 GB, Debian + Docker), *not* as an add-on on the HA G3 and
+  Intel i5 HP micro, 32 GB, Ubuntu Server + Docker), *not* as an add-on on the HA G3 and
   *not* by migrating HA. HA integrates over MQTT + the HACS Frigate integration.
   Rationale and sizing: [docs/12-frigate-nvr.md](../../12-frigate-nvr.md).
 - Zigbee/Z-Wave beyond the single Zigbee coordinator
