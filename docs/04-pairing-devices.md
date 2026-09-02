@@ -40,6 +40,13 @@ Settings → Devices & Services → Add Integration:
 - **ecobee**: `ecobee` integration with an API key from the ecobee developer
   portal.
 
+## Local cameras (Reolink…)
+
+- **Reolink**: built-in `reolink` integration, fully local (no account, no
+  HACS) — camera stream, two-way talk, and (on a doorbell) the visitor
+  button-press event. See [11-reolink-doorbell.md](11-reolink-doorbell.md)
+  for the full walkthrough.
+
 These are configured through the UI (they store OAuth tokens in `.storage/`,
 which is deliberately not in git). The live list of what's actually
 configured lives in [09-integrations-status.md](09-integrations-status.md).

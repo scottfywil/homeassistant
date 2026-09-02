@@ -78,6 +78,7 @@ symlinks) · Git pull · Tailscale · Terminal & SSH.
 | Tuya / Smart Life | 11 | cloud; user-code flow. Mostly outdoor plugs/switches (see area notes) |
 | Google Nest | 2 (6 entities) | Family Room thermostat → Living Room; Garage camera → Garage. SDM + Pub/Sub events enabled. See setup notes below |
 | Vivint (HACS: `natekspencer/ha-vivint`) | 13 active (of 17; 4 disabled) | cloud; user/pass + MFA. **Read-only posture** (pro-monitored). Alarm panel, 2 Kwikset locks, door/window + glass-break + motion sensors, cameras. Garage (×3) + duplicate Nest disabled — see Vivint notes below. Vivint pre-mapped some to Areas |
+| Reolink (built-in `reolink`, local) | 3 devices | See Reolink note below |
 | MQTT / Zigbee2MQTT Bridge | — | infra |
 
 ### Nest / Google Device Access setup (for the record)
@@ -106,6 +107,28 @@ symlinks) · Git pull · Tailscale · Terminal & SSH.
 - The `wget … | bash` one-liner is the other official path but got blocked as
   remote-code-exec; the zip method is equivalent and auditable.
 - The spent **Get HACS** app can be uninstalled (one-shot downloader, no longer needed).
+
+### Reolink note (WORKING, live 2026-09-01)
+
+- Added via **Settings → Devices & Services → Add Integration → Reolink** — HA had
+  already auto-discovered it (mDNS/UPnP), so the config flow was just the doorbell's
+  local admin username/password (typed directly in the HA UI by the owner, never
+  handled by an assistant). Full walkthrough: [11-reolink-doorbell.md](11-reolink-doorbell.md).
+- **3 devices came in under one config entry** (Reolink registers paired accessories
+  through the same local API as the doorbell):
+  - **Front Door** → **Entryway** — the doorbell itself, model **Reolink Video Doorbell
+    WiFi (D340W)**. Confirmed entities: `camera.front_door_fluent` (stream), AI
+    `binary_sensor`s for motion/person/pet/vehicle, **`binary_sensor.front_door_visitor`
+    — the button-press sensor, the trigger to use for a notification automation** —
+    plus a siren switch, quick-reply-message control, and several diagnostic/config
+    entities (day/night mode, IR lights, doorbell volume, etc.) — see the device page
+    for the full list, some entities are disabled by default.
+  - **Basement Chime** → **Rec Room** — a paired Reolink Chime accessory.
+  - **Upstairs Chime** (renamed from the default "Reolink Chime" 2026-09-01) → **Upstairs
+    Hallway** — a second paired Reolink Chime accessory.
+- **Not yet built:** a doorbell-press notification automation (`packages/` PR, same shape
+  as `garage_alerts.yaml`/`cabinet_alerts.yaml`) keying off `binary_sensor.front_door_visitor`
+  — see the "After it's live" section of runbook 11.
 
 ### Vivint notes (for the record)
 - Community integration `natekspencer/ha-vivint` (in the **default HACS store**;

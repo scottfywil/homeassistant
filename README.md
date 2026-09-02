@@ -50,6 +50,7 @@ Follow the runbooks in order:
 8. [Presence sensors: build plan and BOM](docs/08-presence-sensors.md)
 9. [Integrations status (living doc)](docs/09-integrations-status.md)
 10. [Remote verification from a cloud Claude session](docs/10-remote-verification.md)
+11. [Reolink doorbell](docs/11-reolink-doorbell.md)
 
 ## Secrets
 

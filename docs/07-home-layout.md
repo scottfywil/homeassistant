@@ -77,6 +77,10 @@ Work through these during setup (runbook 04):
 - [x] **Cameras**: **Ring dropped** (no Ring). Nest ✅ (Device Access, garage cam), Blink ✅
       (`blink`, cloud). Vivint cameras ✅ via the Vivint integration. Wyze cams → skip
       (need a separate `docker-wyze-bridge` for RTSP; not first-class).
+- [x] **Reolink doorbell** → built-in local `reolink` integration (no cloud, no HACS),
+      live 2026-09-01 — see [11-reolink-doorbell.md](11-reolink-doorbell.md). Device
+      "Front Door" → **Entryway**; two paired Reolink Chime accessories also came in
+      → Rec Room ("Basement Chime") and Upstairs Hallway ("Upstairs Chime").
 - [~] **Wyze bulbs/plugs/sensors** → HACS `SecKatie/ha-wyzeapi` (in the **default** HACS
       store; v0.1.38). Installed + config entry created (API key + login accepted), but
       **setup fails and it's disabled/parked** — see the Wyze note in
