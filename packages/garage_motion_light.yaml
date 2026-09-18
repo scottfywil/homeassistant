@@ -2,13 +2,19 @@
 # minutes. Single automation, no helper input_boolean/timer needed (see
 # pattern note below).
 #
-# Entity IDs confirmed live by the user 2026-09-18 (Developer Tools → States):
-#   light.garage_light          — the garage light (light.* domain, a bulb —
-#                                  not a switch.* smart plug)
-#   event.garage_camera_motion  — the Nest garage camera's motion event
-#                                  (docs/08-presence-sensors.md's earlier
-#                                  event.garage_garage_motion was an
-#                                  unverified guess and was wrong)
+# Entity IDs, corrected 2026-09-18 after the first version silently never
+# fired (see docs/09 "never trust guessed entity IDs" — this is a fresh
+# instance of that exact lesson):
+#   switch.stitch_smart_switch_4_switch_1  — the garage light. Confirmed live
+#     via the entity's own settings dialog (Settings → Devices & Services →
+#     Entities → the entity under the "Garage Light" device). It's a Tuya
+#     "STITCH Smart Switch" (switch.* domain, shown as an Outlet in the UI) —
+#     NOT a light.* bulb. The device is named "Garage Light" and lives in the
+#     Garage area, which is what made light.garage_light look like a
+#     reasonable guess; it doesn't exist, so light.turn_on/light.turn_off
+#     silently no-op'd on every trigger with nothing visible to say why.
+#   event.garage_camera_motion  — the Nest garage camera's motion event,
+#     confirmed live 2026-09-18 (unchanged from the first version).
 #
 # Pattern: Nest SDM camera sensors are `event` entities, not binary_sensors —
 # they don't hold a stable on/off state. Each detection just bumps the
@@ -26,10 +32,10 @@ automation:
       - trigger: state
         entity_id: event.garage_camera_motion
     actions:
-      - action: light.turn_on
+      - action: switch.turn_on
         target:
-          entity_id: light.garage_light
+          entity_id: switch.stitch_smart_switch_4_switch_1
       - delay: "00:15:00"
-      - action: light.turn_off
+      - action: switch.turn_off
         target:
-          entity_id: light.garage_light
+          entity_id: switch.stitch_smart_switch_4_switch_1

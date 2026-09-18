@@ -1,7 +1,7 @@
 # 09 — Integrations Status (living doc)
 
 Snapshot of what's actually running on the box. Update as integrations are
-added. Last updated: **2026-08-09**.
+added. Last updated: **2026-09-18**.
 
 ## Platform state
 
@@ -417,6 +417,39 @@ OFF when *neither* has an active job.
   instead. Left as-is per current scope; revisit if pauses become annoying.
 - Delivered via PR [#3](https://github.com/scottfywil/homeassistant/pull/3) → CI green
   (yamllint, HA config check, ESPHome config check) → squash-merged to `main` → GitOps deploy.
+
+## Garage motion-light automation — done 2026-09-18 (corrected same day)
+
+**Goal:** the garage light turns ON when the Nest garage camera detects motion, OFF after
+15 minutes with no further motion.
+
+- **Package:** `packages/garage_motion_light.yaml` — one automation
+  (`automation.garage_light_follows_motion`, `mode: restart`). Triggers on
+  `event.garage_camera_motion` changing state (Nest SDM camera sensors are `event` entities —
+  each detection just bumps the state to a new timestamp, so a plain `trigger: state` with no
+  `to:`/`from:` catches every one); turns the light on, delays 15 minutes, turns it off. Each
+  new motion event cancels the pending delay and restarts it — one automation, no helper
+  `input_boolean`/`timer`.
+- **Guessed entity_id was wrong — another instance of the same lesson as the cabinet and
+  Prusa Lamp packages.** First version shipped with `light.garage_light`: no garage light
+  entity was documented anywhere in this repo, the device is literally named "Garage Light"
+  and lives in the Garage area, and it's controlled by lighting elsewhere in this house — a
+  `light.*` domain was a reasonable-sounding guess. It doesn't exist. Merged anyway (PR #12)
+  because CI's config check has no live registry to catch it, and the automation then
+  silently no-op'd on every trigger with nothing in the UI to say why — the exact failure
+  mode this repo's guessed-ID lesson keeps warning about.
+- **Real entity, found 2026-09-18 via the device's own entity settings dialog** (Settings →
+  Devices & Services → Entities → the entity under the "Garage Light" device):
+  `switch.stitch_smart_switch_4_switch_1` — a Tuya **"STITCH Smart Switch"** (a Tuya
+  brand not previously documented under a garage device; `switch.*` domain, shows as
+  "Outlet" in the UI). Fixed by switching `light.turn_on`/`light.turn_off` to
+  `switch.turn_on`/`switch.turn_off` against the real ID. `event.garage_camera_motion` (the
+  Nest trigger) was correct from the start and unchanged.
+- **Diagnostic note for next time:** the device's "Related" panel in the UI
+  (Settings → Devices & Services → Devices → the device page) shows what automations
+  reference it — "No automations, scripts or scenes reference this device yet" was the
+  first hard evidence something was wired to the wrong entity, before the actual entity_id
+  was even found. Check that panel early when an automation "does nothing" with no error.
 
 ## Cabinet alerting — ✅✅ COMPLETE: live-tested 2026-07-31 (updated 2026-07-31)
 
