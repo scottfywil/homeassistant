@@ -1,47 +1,35 @@
 # Garage light follows Nest camera motion: on instantly, off after 15 quiet
-# minutes. Single automation, no helper input_boolean/timer needed (see pattern
-# note below).
+# minutes. Single automation, no helper input_boolean/timer needed (see
+# pattern note below).
 #
-# ⚠️ NOT YET VERIFIED — DO NOT MERGE until both entity IDs below are confirmed
-# live (Developer Tools → States). Neither has been checked against the running
-# box; this repo's own hard-earned rule is that a wrong entity_id passes CI
-# silently (the config check has no live registry) and the automation just
-# never fires — see docs/09 "never trust guessed entity IDs" for the history.
-#   - light.garage — the garage light. No garage light entity is documented
-#     anywhere in this repo; confirm one exists and get its real entity_id
-#     (may be a switch.* smart plug instead of a light.* bulb — if so, see the
-#     domain-agnostic note below).
-#   - event.garage_garage_motion — the Nest garage camera's motion event.
-#     docs/08-presence-sensors.md names this ID but flags it as an unverified
-#     placeholder, not a confirmed one.
+# Entity IDs confirmed live by the user 2026-09-18 (Developer Tools → States):
+#   light.garage_light          — the garage light (light.* domain, a bulb —
+#                                  not a switch.* smart plug)
+#   event.garage_camera_motion  — the Nest garage camera's motion event
+#                                  (docs/08-presence-sensors.md's earlier
+#                                  event.garage_garage_motion was an
+#                                  unverified guess and was wrong)
 #
 # Pattern: Nest SDM camera sensors are `event` entities, not binary_sensors —
 # they don't hold a stable on/off state. Each detection just bumps the
 # entity's state to a new timestamp. A plain `trigger: state` with no
 # `to:`/`from:` fires on every one of those bumps, which is the standard way
-# to react to event entities (see docs/09 exploratory notes on the Nest
-# garage camera). `mode: restart` means each new motion event cancels any
-# already-pending turn-off delay and restarts it from zero — so one
-# automation gets both "on instantly on motion" and "off after 15 minutes of
-# no further motion" with nothing else to maintain.
-#
-# If the garage light turns out to be a switch.* entity rather than light.*,
-# swap light.turn_on/light.turn_off for homeassistant.turn_on/
-# homeassistant.turn_off (domain-agnostic — same pattern already used for the
-# kids'-room automation in packages/lighting.yaml) rather than guessing the
-# domain here.
+# to react to event entities. `mode: restart` means each new motion event
+# cancels any already-pending turn-off delay and restarts it from zero — so
+# one automation gets both "on instantly on motion" and "off after 15
+# minutes of no further motion" with nothing else to maintain.
 automation:
   - alias: "Garage light follows motion"
     id: garage_light_follows_motion
     mode: restart
     triggers:
       - trigger: state
-        entity_id: event.garage_garage_motion  # VERIFY — see header
+        entity_id: event.garage_camera_motion
     actions:
       - action: light.turn_on
         target:
-          entity_id: light.garage  # VERIFY — see header
+          entity_id: light.garage_light
       - delay: "00:15:00"
       - action: light.turn_off
         target:
-          entity_id: light.garage  # VERIFY — see header
+          entity_id: light.garage_light
