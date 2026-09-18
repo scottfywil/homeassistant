@@ -418,10 +418,11 @@ OFF when *neither* has an active job.
 - Delivered via PR [#3](https://github.com/scottfywil/homeassistant/pull/3) → CI green
   (yamllint, HA config check, ESPHome config check) → squash-merged to `main` → GitOps deploy.
 
-## Garage motion-light automation — done 2026-09-18 (corrected same day)
+## Garage motion-light automation — ✅ done 2026-09-18 (corrected + extended same day)
 
-**Goal:** the garage light turns ON when the Nest garage camera detects motion, OFF after
-15 minutes with no further motion.
+**Goal:** the garage light turns ON when the Nest garage camera detects motion or any of
+three doors open (both garage doors, the kitchen door), OFF after 15 minutes with no
+further motion.
 
 - **Package:** `packages/garage_motion_light.yaml` — one automation
   (`automation.garage_light_follows_motion`, `mode: restart`). Triggers on
@@ -450,6 +451,15 @@ OFF when *neither* has an active job.
   reference it — "No automations, scripts or scenes reference this device yet" was the
   first hard evidence something was wired to the wrong entity, before the actual entity_id
   was even found. Check that panel early when an automation "does nothing" with no error.
+- **Extended 2026-09-18 to also trigger on doors opening**, same automation
+  (`mode: restart`, so any trigger source — motion or a door — cancels and restarts the
+  same 15-minute off-timer; no risk of two automations racing on the switch):
+  - `binary_sensor.0xffffb40e0601d430_contact` (Dad's garage door) and
+    `binary_sensor.mom_garage_sensor_contact` (Mom's garage door) — not new guesses, the
+    same entities `packages/garage_alerts.yaml` has used live since 2026-07-20.
+  - `binary_sensor.kitchen_door` (device "Kitchen Door", `device_class: door`) — not
+    previously documented anywhere in this repo; confirmed live via its own entity
+    settings dialog. All three door triggers use `to: "on"` (open only, not close).
 
 ## Cabinet alerting — ✅✅ COMPLETE: live-tested 2026-07-31 (updated 2026-07-31)
 
