@@ -1,4 +1,5 @@
-# Garage light follows Nest camera motion: on instantly, off after 15 quiet
+# Garage light turns ON on Nest camera motion or either garage door opening
+# (kitchen-door trigger pending — see note below), OFF after 15 quiet
 # minutes. Single automation, no helper input_boolean/timer needed (see
 # pattern note below).
 #
@@ -16,21 +17,43 @@
 #   event.garage_camera_motion  — the Nest garage camera's motion event,
 #     confirmed live 2026-09-18 (unchanged from the first version).
 #
+# Door triggers added 2026-09-18. The two garage-door sensors are NOT new
+# guesses — they're the same already-verified, already-deployed entities
+# packages/garage_alerts.yaml has used live since 2026-07-20:
+#   binary_sensor.0xffffb40e0601d430_contact  — Dad's garage door
+#   binary_sensor.mom_garage_sensor_contact   — Mom's garage door
+#
+# ⏳ PENDING: a third "kitchen door opens" trigger was requested but no
+# kitchen-door entity is documented anywhere in this repo — nothing is
+# guessed here per the lesson above. Once the real entity_id is confirmed
+# live (Developer Tools → States, filter "door", or check the Vivint
+# device list — Vivint sensors are often labeled generically rather than
+# by room), add it as a fourth item in `triggers:` below, same shape as
+# the two garage-door entries (trigger: state, to: "on").
+#
 # Pattern: Nest SDM camera sensors are `event` entities, not binary_sensors —
 # they don't hold a stable on/off state. Each detection just bumps the
 # entity's state to a new timestamp. A plain `trigger: state` with no
 # `to:`/`from:` fires on every one of those bumps, which is the standard way
-# to react to event entities. `mode: restart` means each new motion event
-# cancels any already-pending turn-off delay and restarts it from zero — so
-# one automation gets both "on instantly on motion" and "off after 15
-# minutes of no further motion" with nothing else to maintain.
+# to react to event entities. The door sensors are ordinary binary_sensors,
+# so those triggers use `to: "on"` (open) specifically, rather than firing
+# on close too. `mode: restart` means each new trigger — motion or a door
+# opening — cancels any already-pending turn-off delay and restarts it from
+# zero, across every trigger source in one automation, so nothing races
+# against a second automation managing the same switch.
 automation:
-  - alias: "Garage light follows motion"
+  - alias: "Garage light follows motion and door opens"
     id: garage_light_follows_motion
     mode: restart
     triggers:
       - trigger: state
         entity_id: event.garage_camera_motion
+      - trigger: state
+        entity_id: binary_sensor.0xffffb40e0601d430_contact
+        to: "on"
+      - trigger: state
+        entity_id: binary_sensor.mom_garage_sensor_contact
+        to: "on"
     actions:
       - action: switch.turn_on
         target:
