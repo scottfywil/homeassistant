@@ -9,7 +9,10 @@ deliberately omitted — this repo is public.
 - Finished basement (~1,380 sqft)
 - 3-stall attached garage, **two doors (double + single), both with openers**
 - Gas furnace + central AC, gas fireplace in the great room
-- HA server (EliteDesk) lives in the **basement mechanical/storage area**
+- HA server (EliteDesk) lives in the **basement Utility Room**, which is also the
+  mechanical room, the internet demarc and the network equipment room
+- Frigate box: in the upstairs Office today; moving to the Utility Room
+- No outdoor Ethernet runs yet, so wired (PoE) outdoor cameras need new runs
 
 ## Areas by level
 
@@ -109,9 +112,13 @@ Work through these during setup (runbook 04):
       power/volume/app control; great for "movie mode" scenes.
 - [ ] **Fire TV devices (many)** → `androidtv` integration per device as
       wanted; not a priority.
-- [ ] **eero Pro 7 mesh (×2)** — the network itself. No official HA
-      integration; use the eero app for the DHCP reservations this project
-      needs (HA box, every ESP32 board). Old eero 2nd-gens are retired.
+- [ ] **eero Pro 7 mesh (×4, all wired)** — trusted Wi-Fi. Two more were bought
+      after this doc was written; one may be sold after a coverage walk-test.
+      Old eero 2nd-gens are retired. A home network redesign (2026-11) puts the
+      eeros in bridge mode behind a VLAN-routing firewall (SonicWall now, UniFi
+      later), with IoT devices on a separate Ruckus SSID/VLAN. From then on, the
+      DHCP reservations this project needs (HA box, every ESP32 board) live on
+      the firewall, not in the eero app, and HA needs a firewall path to IoT.
 
 ## Echo fleet (voice endpoints via Nabu Casa)
 
