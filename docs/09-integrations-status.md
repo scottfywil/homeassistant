@@ -1,7 +1,7 @@
 # 09 — Integrations Status (living doc)
 
 Snapshot of what's actually running on the box. Update as integrations are
-added. Last updated: **2026-09-18**.
+added. Last updated: **2026-11-03**.
 
 ## Platform state
 
@@ -30,6 +30,30 @@ symlinks) · Git pull · Tailscale · Terminal & SSH.
   Utility Room (SNZB-03P motion ×3) · Master Bathroom, Boys Bathroom, Basement
   Bathroom (SNZB-02D temp/humidity ×3). Still boxed: 1× SNZB-03P (→ Toy Room),
   1× SNZB-02D (spare / Workout Room candidate).
+- **Presence-sensor purchase, 2026-11-03** (prompted by the Nest garage camera's
+  unreliable motion events — "works sometimes" — see the garage motion-light
+  section below): 2× **SONOFF SNZB-03P** (PIR, same model as the existing
+  spares) + 4× **WenzhiIoT Zigbee 24GHz mmWave presence sensor** (Tuya-based;
+  marketed for Tuya Smart Life + Home Assistant/Zigbee2MQTT). Z2M has a
+  supported-device page for this family under vendor **Wenzhi**, model
+  `MTD285-ZB` — exposes `presence` (binary) + `state` (none/presence/move),
+  `illuminance`, configurable `min_distance`/`max_distance` detection gates
+  (0–8.4m) and per-zone sensitivity thresholds, plus `delay_time`/`block_time`
+  tuning — richer than a plain on/off motion sensor, closer to the DIY
+  LD2410C build's capability. If Z2M doesn't auto-recognize the exact unit's
+  manufacturer ID, the seller's listings offer an external converter file on
+  request. Not yet paired. **Planned placement:**
+  - 1× SNZB-03P → **Garage** (to become a 5th trigger in
+    `packages/garage_motion_light.yaml`, additive alongside the Nest camera
+    and the three door sensors — "keep both" per user decision).
+  - 1× SNZB-03P → still unassigned.
+  - 2× WenzhiIoT mmWave → **Living Room** and **Rec Room**.
+  - 2× WenzhiIoT mmWave → undecided: either **Office** (upstairs) +
+    **Megan's office** (basement), or one in each of the **boys' bedrooms**.
+  - A ready-made **ThirdReality Smart Presence Sensor R3** (60GHz mmWave,
+    USB-C powered, confirmed Z2M support under model `3RPL01084Z`) was
+    researched and considered for the garage specifically, but the user opted
+    for a Sonoff PIR there instead — not purchased.
 - **Sylvania/Osram bulbs ×2** migrated off the Echo Zigbee hub: "Dresser Lamp"
   (74283) + "Utility Room Lamp" (73693) — both routing. ⚠️ "Dresser Lamp" name
   may collide with the existing Hue "Dresser Lamp" — resolve.
