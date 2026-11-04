@@ -1,7 +1,7 @@
 # 09 — Integrations Status (living doc)
 
 Snapshot of what's actually running on the box. Update as integrations are
-added. Last updated: **2026-11-03**.
+added. Last updated: **2026-11-04**.
 
 ## Platform state
 
@@ -34,22 +34,33 @@ symlinks) · Git pull · Tailscale · Terminal & SSH.
   unreliable motion events — "works sometimes" — see the garage motion-light
   section below): 2× **SONOFF SNZB-03P** (PIR, same model as the existing
   spares) + 4× **WenzhiIoT Zigbee 24GHz mmWave presence sensor** (Tuya-based;
-  marketed for Tuya Smart Life + Home Assistant/Zigbee2MQTT). Z2M has a
-  supported-device page for this family under vendor **Wenzhi**, model
-  `MTD285-ZB` — exposes `presence` (binary) + `state` (none/presence/move),
-  `illuminance`, configurable `min_distance`/`max_distance` detection gates
-  (0–8.4m) and per-zone sensitivity thresholds, plus `delay_time`/`block_time`
-  tuning — richer than a plain on/off motion sensor, closer to the DIY
-  LD2410C build's capability. If Z2M doesn't auto-recognize the exact unit's
-  manufacturer ID, the seller's listings offer an external converter file on
-  request. Not yet paired. **Planned placement:**
+  marketed for Tuya Smart Life + Home Assistant/Zigbee2MQTT).
+  - **Correction 2026-11-04 (units arrived):** the box label reads
+    **SKU `WZ-M100-ZB-24G`, "Wall Mount + ZigBee 24G"** — the WZ-M100
+    (ZY-M100-module) family, **not** the `MTD285-ZB` this entry first named
+    (that was inferred from the brand name before the units were in hand).
+    Z2M has a native page for **Wenzhi `WZ-M100`** (added in
+    zigbee-herdsman-converters v19.71.0): exposes `presence` (binary),
+    `target_distance`, `illuminance`, and settable `sensitivity` (1–9),
+    `minimum_range`/`maximum_range` (0–10m), `detection_delay`, and
+    `fading_time` (5–1500s — the presence hold-off timeout). That page lists no
+    Tuya fingerprint, and this family ships under several `_TZE204_*` IDs, so
+    **confirm after pairing** that Z2M's About tab shows it as supported
+    (model `WZ-M100` or a Tuya `ZY-M100-24G*` variant), not "Unsupported".
+  - **Known quirk of the ZY-M100 family:** very chatty — `target_distance`
+    reports roughly every second while someone moves, which bloats the
+    recorder DB and adds Zigbee traffic ×4 sensors. Set the Z2M device option
+    `time_start` to `1970` (stops repeated Tuya time-sync requests), and once
+    entity IDs are known consider a `recorder: exclude:` for the
+    `*_target_distance` sensors in `packages/system.yaml`.
+  - Not yet paired. **Placement:**
   - 1× SNZB-03P → **Garage** (to become a 5th trigger in
     `packages/garage_motion_light.yaml`, additive alongside the Nest camera
     and the three door sensors — "keep both" per user decision).
   - 1× SNZB-03P → still unassigned.
-  - 2× WenzhiIoT mmWave → **Living Room** and **Rec Room**.
-  - 2× WenzhiIoT mmWave → undecided: either **Office** (upstairs) +
-    **Megan's office** (basement), or one in each of the **boys' bedrooms**.
+  - 4× WenzhiIoT mmWave → **Living Room**, **Rec Room**, **Hunter's
+    Bedroom**, **Sam's Bedroom** (boys' rooms chosen over the two offices,
+    decided 2026-11-04).
   - A ready-made **ThirdReality Smart Presence Sensor R3** (60GHz mmWave,
     USB-C powered, confirmed Z2M support under model `3RPL01084Z`) was
     researched and considered for the garage specifically, but the user opted
